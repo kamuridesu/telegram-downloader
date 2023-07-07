@@ -25,6 +25,7 @@ export class PasswordConfirmPage implements OnInit {
       });
       return await toast.present()
     }
+    await this.dataService.set("TELEGRAM_SESSION_STRING", "yes");
     return this.router.navigate(['/chats'])
   }
 
