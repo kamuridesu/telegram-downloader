@@ -1,0 +1,22 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      Confirm code
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div id="container">
+    <ion-list>
+      <ion-item>
+        <ion-input (ionInput)="validateConfirmationCode()" [(ngModel)]="confirmationCode" class="ion-text-center" labelPlacement="floating" value="">
+          <div slot="label">Confirmation code<ion-text color="danger"> (Required)</ion-text></div>
+        </ion-input>
+      </ion-item>
+    </ion-list>
+
+    <br/>
+    <ion-button (click)="validateOnButtonSubmit()" >Confirm</ion-button>
+  </div>
+</ion-content>

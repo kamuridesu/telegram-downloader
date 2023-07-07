@@ -1,0 +1,22 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      Login
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div id="container">
+    <ion-list>
+      <ion-item>
+        <ion-input [(ngModel)]="phoneNumber" class="ion-text-center" labelPlacement="floating" value="">
+          <div slot="label">Phone Number <ion-text color="danger">(Required)</ion-text></div>
+        </ion-input>
+      </ion-item>
+    </ion-list>
+
+    <br/>
+    <ion-button (click)="validatePhoneNumber()">Confirm</ion-button>
+  </div>
+</ion-content>
