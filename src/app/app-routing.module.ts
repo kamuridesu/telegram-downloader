@@ -6,7 +6,7 @@ import { LoginComponent } from './login/login.component';
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'login',
+    redirectTo: 'chats',
     pathMatch: 'full'
   },
   {
@@ -32,6 +32,10 @@ const routes: Routes = [
   {
     path: 'config',
     loadChildren: () => import('./config/config.module').then( m => m.ConfigPageModule)
+  },
+  {
+    path: 'downloads',
+    loadChildren: () => import('./downloads/downloads.module').then( m => m.DownloadsPageModule)
   }
 ];
 @NgModule({

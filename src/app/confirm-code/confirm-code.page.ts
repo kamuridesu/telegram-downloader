@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 
@@ -9,7 +9,7 @@ import { DataService } from '../services/data.service';
   templateUrl: './confirm-code.page.html',
   styleUrls: ['./confirm-code.page.scss'],
 })
-export class ConfirmCodePage implements OnInit {
+export class ConfirmCodePage implements OnInit, OnDestroy {
 
   confirmationCode: string = "";
 
@@ -40,10 +40,6 @@ export class ConfirmCodePage implements OnInit {
   }
 
   async ngOnInit() {
-    if (await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
-      console.log("SESSION STIRNG RXISTS");
-      this.router.navigate(["/chats"]);
-    } 
   }
 
   async ionViewWillEnter() {
@@ -51,6 +47,14 @@ export class ConfirmCodePage implements OnInit {
       console.log("SESSION STIRNG RXISTS");
       this.router.navigate(["/chats"]);
     }
+  }
+
+  ionViewWillLeave() {
+    console.log("Confirm - ViewWillLeave")
+  }
+
+  ngOnDestroy() {
+    console.log("Confirm - OnDestroy")
   }
 
 }

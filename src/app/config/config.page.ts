@@ -28,6 +28,10 @@ export class ConfigPage implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
+    
+  }
+
+  async ionViewWillEnter() {
     if (!await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
       console.log("NOT SESSION STIRNG RXISTS");
       this.router.navigate(["/login"]);
@@ -36,14 +40,8 @@ export class ConfigPage implements OnInit, OnDestroy {
     }
   }
 
-  async ionViewWillEnter() {
-    if (!await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
-      console.log("NOT SESSION STIRNG RXISTS");
-      this.router.navigate(["/login"]);
-    }
-  }
-
   ngOnDestroy() {
+    console.log("Config - OnDetroy");
     this.stopPolling();
   }
 
@@ -132,7 +130,8 @@ export class ConfigPage implements OnInit, OnDestroy {
     this.router.navigate(["/login"]);
   }
 
-  ionViewDidLeave() {
-
+  ionViewWillLeave() {
+    console.log("Config - ViewWillLeave")
   }
+  
 }

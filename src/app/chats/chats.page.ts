@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { NavController } from '@ionic/angular';
 
 import { DataService } from '../services/data.service';
 import TelegramService from '../services/telegram.service';
@@ -10,7 +11,7 @@ import { InfiniteScrollCustomEvent, ToastController } from '@ionic/angular';
   templateUrl: './chats.page.html',
   styleUrls: ['./chats.page.scss'],
 })
-export class ChatsPage implements OnInit {
+export class ChatsPage implements OnInit, OnDestroy {
 
   items: string[] = [];
 
@@ -31,14 +32,11 @@ export class ChatsPage implements OnInit {
   }
 
   async ngOnInit() {
-    if (!await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
-      console.log("NOT SESSION STIRNG RXISTS");
-      this.router.navigate(["/login"]);
-    }
+
   }
 
   async ionViewWillEnter() {
-    if (!await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
+    if (!(await this.dataService.hasKey("TELEGRAM_SESSION_STRING"))) {
       console.log("NOT SESSION STIRNG RXISTS");
       this.router.navigate(["/login"]);
     } else {
@@ -50,7 +48,7 @@ export class ChatsPage implements OnInit {
   private async generateItems() {
     const count = this.items.length + 1;
     for (let i = 0; i < 50; i++) {
-      this.items.push(`Item ${count + i}`);
+      this.items.push(`Chat ${count + i}`);
     }
   }
 
@@ -59,6 +57,14 @@ export class ChatsPage implements OnInit {
     setTimeout(() => {
       (ev as InfiniteScrollCustomEvent).target.complete();
     }, 500);
+  }
+
+  ionViewWillLeave() {
+    console.log("Chats - ViewWillLeave")
+  }
+
+  ngOnDestroy() {
+    console.log("Chats - OnDestroy")
   }
 
 }
