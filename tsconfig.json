@@ -32,7 +32,8 @@
     "lib": [
       "es2018", 
       "dom",
-      "ES6"
+      "ES6",
+      "ES2020.Promise"
     ],
     "useDefineForClassFields": false
   },
@@ -40,6 +41,7 @@
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
-    "strictTemplates": true
+    "strictTemplates": true,
+    "allowSyntheticDefaultImports": true
   }
 }

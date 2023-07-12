@@ -8,7 +8,8 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { DataService } from './services/data.service';
-// import TelegramService from './services/telegram.service';
+import { CacheService } from './services/cache.service';
+import TelegramService from './services/telegram.service';
 
 import { RouterModule } from '@angular/router';
 
@@ -17,7 +18,7 @@ import { IonicStorageModule } from '@ionic/storage-angular';
 @NgModule({
   declarations: [AppComponent, LoginComponent],
   imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule, RouterModule, IonicStorageModule.forRoot()],
-  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }, DataService],
+  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }, DataService, TelegramService, CacheService],
   bootstrap: [AppComponent],
 })
 export class AppModule { }

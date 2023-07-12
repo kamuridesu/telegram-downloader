@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 
 import { DataService } from '../services/data.service';
+import TelegramService from '../services/telegram.service';
 
 @Component({
   selector: 'app-confirm-code',
@@ -13,12 +14,16 @@ export class ConfirmCodePage implements OnInit, OnDestroy {
 
   confirmationCode: string = "";
 
-  constructor(private dataService: DataService, private router: Router, private toastController: ToastController) { }
+  constructor(private dataService: DataService, private router: Router, private toastController: ToastController, private telegram: TelegramService) { }
 
   async validateConfirmationCode() {
     if(this.confirmationCode.length == 5) {
       console.log("confmation code ok");
-      return this.router.navigate(["/password-confirm"])
+      await this.telegram.inputTelegramCode(this.confirmationCode);
+      if(this.telegram.needsPasswordAuth) {
+        return this.router.navigate(["/password-confirm"]);
+      }
+      return this.router.navigate(["/chats"]);
     }
     return ""
   }
@@ -43,8 +48,8 @@ export class ConfirmCodePage implements OnInit, OnDestroy {
   }
 
   async ionViewWillEnter() {
-    if (await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
-      console.log("SESSION STIRNG RXISTS");
+    await this.telegram.init();
+    if (this.telegram.loggedIn) {
       this.router.navigate(["/chats"]);
     }
   }

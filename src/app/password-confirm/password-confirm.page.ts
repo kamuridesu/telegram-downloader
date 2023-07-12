@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 
 import { DataService } from '../services/data.service';
+import TelegramService from '../services/telegram.service';
 
 
 @Component({
@@ -14,27 +15,39 @@ export class PasswordConfirmPage implements OnInit, OnDestroy {
 
   password: string = "";
 
-  constructor(private dataService: DataService, private router: Router, private toastController: ToastController) { }
+  constructor(private dataService: DataService,
+    private router: Router,
+    private toastController: ToastController,
+    private telegram: TelegramService
+  ) { }
 
   async validatePassword() {
+    let toastMessage = "";
     if (this.password.trim() === "") {
-      const toast = await this.toastController.create({
-        message: 'Password cannot be empty.',
-        duration: 2000,
-        position: 'bottom'
-      });
-      return await toast.present()
+      toastMessage = 'Password cannot be empty.';
+    } else {
+      try {
+        await this.telegram.inputPassword(this.password.trim());
+        this.dataService.set("TELEGRAM_SESSION_STRING", this.telegram.client?.session.save());
+        return this.router.navigate(['/chats'])
+      } catch (err) {
+        toastMessage = "Wrong password!";
+      }
     }
-    await this.dataService.set("TELEGRAM_SESSION_STRING", "yes");
-    return this.router.navigate(['/chats'])
+    const toast = await this.toastController.create({
+      message: toastMessage,
+      duration: 2000,
+      position: 'bottom'
+    });
+    return await toast.present()
   }
 
   async ngOnInit() {
   }
 
   async ionViewWillEnter() {
-    if (await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
-      console.log("SESSION STIRNG RXISTS");
+    await this.telegram.init();
+    if (this.telegram.loggedIn) {
       this.router.navigate(["/chats"]);
     }
   }

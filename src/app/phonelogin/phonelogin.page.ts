@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 
 import { DataService } from '../services/data.service';
+import TelegramService from '../services/telegram.service';
 
 @Component({
   selector: 'app-phonelogin',
@@ -13,7 +14,7 @@ export class PhoneloginPage implements OnInit, OnDestroy {
 
   phoneNumber: string = '';
 
-  constructor(private router: Router, private dataService: DataService, private toastController: ToastController) { }
+  constructor(private router: Router, private dataService: DataService, private toastController: ToastController, private telegram: TelegramService) { }
 
   async validatePhoneNumber() {
     if (this.phoneNumber.trim() === '') {
@@ -24,6 +25,7 @@ export class PhoneloginPage implements OnInit, OnDestroy {
       });
       return await toast.present()
     }
+    await this.telegram.loginWithPhoneNumber(this.phoneNumber);
     this.router.navigate(["/confirm-code"])
   }
 
@@ -32,8 +34,8 @@ export class PhoneloginPage implements OnInit, OnDestroy {
   }
 
   async ionViewWillEnter() {
-    if (await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
-      console.log("SESSION STIRNG RXISTS");
+    await this.telegram.init();
+    if (this.telegram.loggedIn) {
       this.router.navigate(["/chats"]);
     }
   }
