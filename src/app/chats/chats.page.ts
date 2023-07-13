@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer';
+import { cloneDeep } from "lodash";
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
@@ -15,12 +16,12 @@ import { ToastController } from '@ionic/angular';
 })
 export class ChatsPage implements OnInit, OnDestroy {
 
-  items: any[] = [];
+  chats: any[] = [];
+  results: any[] = [...this.chats];
   chatsLoaded = false;
   progress = 0;
 
   constructor(
-    // private telegramService: TelegramService,
     private dataService: DataService,
     private toastController: ToastController,
     private router: Router,
@@ -48,32 +49,42 @@ export class ChatsPage implements OnInit, OnDestroy {
       console.log("NOT SESSION STIRNG RXISTS");
       this.router.navigate(["/login"]);
     } else {
-      const cached = await this.cacheService.getCache();
-      if (cached) {
-        this.items = cached;
+      this.chats = await this.telegram.loadChats();
+      this.results = [...this.chats];
+      const cachedImages = await this.cacheService.getCache();
+      if (cachedImages) {
         this.progress = 1;
+        for (let chat of this.chats) {
+          for (let image of cachedImages){
+            if (JSON.stringify(chat.id) === JSON.stringify(image.channelId)) {
+              chat.profilePhoto = image.image;
+            }
+          }
+        }
       } else {
-        this.generateItems();
+        this.loadProfilePhotos();
       }
+      console.log(this.chats)
     }
   }
 
-
-  private async generateItems() {
-    const chats = await this.telegram.loadChats();
-    let x = 0;
-    for (let chat of chats) {
+  private async loadProfilePhotos() {
+    let count = 0;
+    const images: any[] = [];
+    for (let chat of this.chats) {
+      count++;
       let image = await this.getProfilePhoto(chat);
       if (!image.includes("picsum")) {
         image = `data:image/jpeg;base64,${image}`;
       }
-      this.items.push({
-        title: chat.title ? chat.title : (chat.name ? chat.name : "Undefined"),
-        profilePhoto: image
+      images.push({
+        image: image,
+        channelId: chat.id
       });
-      this.progress = Math.round(this.items.length / chats.length * 100) / 100;
+      chat.profilePhoto = image;
+      this.progress = Math.round(count / this.chats.length * 100) / 100;
     }
-    this.cacheService.cacheChats(this.items);
+    this.cacheService.cacheChats(images);
     this.chatsLoaded = true;
   }
 
@@ -84,6 +95,15 @@ export class ChatsPage implements OnInit, OnDestroy {
       return encoded;
     }
     return "https://picsum.photos/80/80?random="
+  }
+
+  handleInput(event: any) {
+    const query = event.target.value.toLowerCase();
+    if (query == "") {
+      this.results = [...this.chats];
+    } else {
+      this.results = this.results.filter((d) => d.title.toLowerCase().indexOf(query) > -1);
+    }
   }
 
   ionViewWillLeave() {
