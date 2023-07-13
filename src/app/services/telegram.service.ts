@@ -24,9 +24,6 @@ export default class TelegramService {
   ) { }
 
   async init() {
-    if (this.client != undefined) {
-      return;
-    }
     if (await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
       this.stringSession = new StringSession(await this.dataService.get("TELEGRAM_SESSION_STRING"));
     }
@@ -105,6 +102,7 @@ export default class TelegramService {
   }
 
   public async logOut() {
+    this.loggedIn = false;
     await this.client?.invoke(
       new Api.auth.LogOut()
     );

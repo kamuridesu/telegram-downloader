@@ -4,6 +4,7 @@ import { ToastController } from '@ionic/angular';
 import { AlertController } from '@ionic/angular';
 
 import { DataService } from '../services/data.service';
+import TelegramService from '../services/telegram.service';
 import { ConfigService } from '../services/config.service';
 import { interval, Subscription } from 'rxjs';
 
@@ -23,6 +24,7 @@ export class ConfigPage implements OnInit, OnDestroy {
     private dataService: DataService,
     private configService: ConfigService,
     private alertController: AlertController,
+    private telegram: TelegramService,
   ) {
     this.getTotalConcurrentDownloads();
   }
@@ -98,6 +100,15 @@ export class ConfigPage implements OnInit, OnDestroy {
   }
 
   updateTotalConcurrentDownloads(newTotal: number) {
+    if (newTotal > this.configService.getMaxConcurrentDownloads()) {
+      this.toastController.create({
+        message: "Max total concurrents downloads allowed: " + this.configService.getMaxConcurrentDownloads(),
+        duration: 2000,
+        position: 'bottom'
+      }).then((toast) => {
+        toast.present().then(() => {}).catch((err) => {console.log(err)});
+      })
+    }
     this.configService.setTotalConcurrentDownloads(newTotal).then(() => {
       this.totalConcurrentDownloads = newTotal;
     }).catch((error) => {
@@ -125,9 +136,10 @@ export class ConfigPage implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  private logout() {
+  private async logout() {
+    await this.telegram.logOut();
     this.dataService.delete("TELEGRAM_SESSION_STRING");
-    this.router.navigate(["/login"]);
+    this.router.navigate(["/login"], {skipLocationChange: true});
   }
 
   ionViewWillLeave() {

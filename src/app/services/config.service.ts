@@ -36,7 +36,7 @@ export class ConfigService {
     return this.totalConcurrentDownload;
   }
 
-  public async getMaxConcurrentDownloads(): Promise<number> {
+  public getMaxConcurrentDownloads(): number {
     return this.MAX_DOWNLOADS_TOTAL;
   }
 

@@ -21,6 +21,8 @@ export class ChatsPage implements OnInit, OnDestroy {
   chatsLoaded = false;
   progress = 0;
 
+  private initializing: boolean = false;
+
   constructor(
     private dataService: DataService,
     private toastController: ToastController,
@@ -39,33 +41,39 @@ export class ChatsPage implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
-
+    if (!this.initializing) await this.ionViewWillEnter();
   }
 
   async ionViewWillEnter() {
-    await this.telegram.init();
-    console.log("enter chats");
+    console.log("CHATS - ViewWillEnter");
+    if (this.initializing) return;
+    this.initializing = true;
     if (!(await this.dataService.hasKey("TELEGRAM_SESSION_STRING"))) {
-      console.log("NOT SESSION STIRNG RXISTS");
+      this.initializing = false;
       this.router.navigate(["/login"]);
     } else {
+      await this.telegram.init();
       this.chats = await this.telegram.loadChats();
+      console.log(this.chats);
       this.results = [...this.chats];
+      console.log(this.results);
       const cachedImages = await this.cacheService.getCache();
-      if (cachedImages) {
+      if (cachedImages && cachedImages.length > 0) {
         this.progress = 1;
         for (let chat of this.chats) {
           for (let image of cachedImages){
             if (JSON.stringify(chat.id) === JSON.stringify(image.channelId)) {
               chat.profilePhoto = image.image;
+              break;
             }
           }
         }
       } else {
+        this.sendToastNotification("Loading chats pictures...");
         this.loadProfilePhotos();
       }
-      console.log(this.chats)
     }
+    this.initializing = false;
   }
 
   private async loadProfilePhotos() {
