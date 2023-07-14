@@ -1,13 +1,13 @@
 import { Buffer } from 'buffer';
-import { cloneDeep } from "lodash";
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { AlertController, IonicSafeString, ToastController } from '@ionic/angular';
 
 import { DataService } from '../services/data.service';
 import TelegramService from '../services/telegram.service';
 import { CacheService } from '../services/cache.service';
-import { ToastController } from '@ionic/angular';
+import { DownloadsService } from '../services/downloads.service';
 
 @Component({
   selector: 'app-chats',
@@ -26,9 +26,11 @@ export class ChatsPage implements OnInit, OnDestroy {
   constructor(
     private dataService: DataService,
     private toastController: ToastController,
+    private alertController: AlertController,
     private router: Router,
     private telegram: TelegramService,
     private cacheService: CacheService,
+    private downloads: DownloadsService,
   ) { }
 
   private async sendToastNotification(errorMessage: string) {
@@ -41,7 +43,7 @@ export class ChatsPage implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
-    if (!this.initializing) await this.ionViewWillEnter();
+    
   }
 
   async ionViewWillEnter() {
@@ -53,7 +55,9 @@ export class ChatsPage implements OnInit, OnDestroy {
       this.router.navigate(["/login"]);
     } else {
       await this.telegram.init();
-      this.chats = await this.telegram.loadChats();
+      while (this.chats.length < 1) {
+        this.chats = await this.telegram.loadChats();
+      }
       console.log(this.chats);
       this.results = [...this.chats];
       console.log(this.results);
@@ -92,6 +96,7 @@ export class ChatsPage implements OnInit, OnDestroy {
       chat.profilePhoto = image;
       this.progress = Math.round(count / this.chats.length * 100) / 100;
     }
+    this.cacheService.expireCache(true);
     this.cacheService.cacheChats(images);
     this.chatsLoaded = true;
   }
@@ -105,7 +110,27 @@ export class ChatsPage implements OnInit, OnDestroy {
     return "https://picsum.photos/80/80?random="
   }
 
-  handleInput(event: any) {
+  async presentInputPopup(chat: any) {
+    const alert = await this.alertController.create({
+      header: `Start Download of Chat ${chat.title}?`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Start',
+          handler: () => {
+            console.log(chat);
+          }
+        }
+      ]
+    });
+  
+    await alert.present();
+  }
+
+  public async handleInput(event: any) {
     const query = event.target.value.toLowerCase();
     if (query == "") {
       this.results = [...this.chats];

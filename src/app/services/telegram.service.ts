@@ -119,7 +119,10 @@ export default class TelegramService {
     return medias;
   }
 
-  public async downloadMedia(mediaEntity: any) {
-    const buffer = await this.client?.downloadMedia(mediaEntity);
+  public async downloadMedia(mediaEntity: any, progressCallback: any = (() => {})) {
+    const buffer = await this.client?.downloadMedia(mediaEntity, {
+      progressCallback: progressCallback
+    });
+    return buffer;
   }
 }

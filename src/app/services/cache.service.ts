@@ -38,10 +38,10 @@ export class CacheService {
     return undefined;
   }
 
-  private async expireCache() {
+  public async expireCache(prune: boolean = false) {
     if (await this.dataService.hasKey(this.CACHE_NAME)) {
       const data = JSON.parse(await this.dataService.get(this.CACHE_NAME));
-      if ((Date.now() / 1000) - data.cacheCrationDate >= this.CACHE_EXPIRATION) {
+      if ((Date.now() / 1000) - data.cacheCrationDate >= this.CACHE_EXPIRATION || prune) {
         await this.dataService.delete(this.CACHE_NAME);
       }
     }

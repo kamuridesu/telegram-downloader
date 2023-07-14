@@ -1,16 +1,40 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="chats"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Downloads</ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content>
-  <div id="container">
+<ion-menu side="start" contentId="main-content">
+  <ion-header>
+    <ion-toolbar>
+      <ion-title>Telegram Downloader</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content>
     <ion-list>
-      
+      <ion-item button [routerLink]="['/config']">
+        <ion-icon slot="start" name="settings-outline"></ion-icon>
+        <ion-label>Configurations</ion-label>
+      </ion-item>
     </ion-list>
-  </div>
-</ion-content>
+  </ion-content>
+</ion-menu>
+
+<div class="ion-page" id="main-content">
+  <ion-header>
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-menu-button></ion-menu-button>
+      </ion-buttons>
+      <ion-title>Telegram Downloader</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content>
+    <div id="container">
+      <ion-item-sliding button *ngFor="let item of items; let index">
+        <ion-item>
+          <ion-col>
+            <ion-text color="{{ item.color }}">{{item.filename}}</ion-text>
+            <ion-progress-bar [value]="item.progress"></ion-progress-bar>
+          </ion-col>
+          <ion-button (click)="presentInputPopup(item)" *ngIf="!item.completed" size="small">Delete</ion-button>
+        </ion-item>
+      </ion-item-sliding>
+    </div>
+  </ion-content>
+</div>

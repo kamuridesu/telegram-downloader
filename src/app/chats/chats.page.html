@@ -35,7 +35,7 @@
   <ion-content>
     <div id="container">
       <ion-list>
-        <ion-item button *ngFor="let item of results; let index">
+        <ion-item button (click)="presentInputPopup(item)" *ngFor="let item of results; let index">
           <ion-avatar slot="start">
             <img [src]="item.profilePhoto" alt="avatar" />
           </ion-avatar>
