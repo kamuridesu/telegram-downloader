@@ -26,15 +26,23 @@
 
   <ion-content>
     <div id="container">
-      <ion-item-sliding button *ngFor="let item of items; let index">
-        <ion-item>
-          <ion-col>
-            <ion-text color="{{ item.color }}">{{item.filename}}</ion-text>
-            <ion-progress-bar [value]="item.progress"></ion-progress-bar>
-          </ion-col>
-          <ion-button (click)="presentInputPopup(item)" *ngIf="!item.completed" size="small">Delete</ion-button>
-        </ion-item>
-      </ion-item-sliding>
+      <ion-item *ngIf="downloads.status === 'DOWNLOADING'">
+        <ion-item-sliding button *ngFor="let item of items; let index">
+          <ion-item>
+            <ion-col>
+              <ion-text color="{{ item.color }}">{{item.filename}}</ion-text>
+              <ion-progress-bar [value]="item.progress"></ion-progress-bar>
+            </ion-col>
+            <ion-button (click)="presentInputPopup(item)" *ngIf="!item.completed" size="small">Delete</ion-button>
+          </ion-item>
+        </ion-item-sliding>
+      </ion-item>
+      <ion-item *ngIf="downloads.status === 'PROCESSING'">
+        <ion-col>
+          <ion-text>Processing chats... Please wait.</ion-text>
+          <ion-progress-bar type="indeterminate"></ion-progress-bar>
+        </ion-col>
+      </ion-item>
     </div>
   </ion-content>
 </div>

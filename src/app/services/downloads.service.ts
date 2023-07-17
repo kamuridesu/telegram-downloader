@@ -14,6 +14,8 @@ export class DownloadsService {
   private mediasData: any[] = [];
   private chatInfo: any;
 
+  public status: string = "WAITING";
+
   constructor(
     private telegram: TelegramService,
     private configService: ConfigService,
@@ -25,6 +27,8 @@ export class DownloadsService {
       const savedData = await this.dataService.get(this.KEYNAME);
       this.mediasData = savedData.medias;
       this.chatInfo = savedData.chatInfo;
+      this.isDownloadingAChat = true;
+      this.status = "DOWNLOADING";
     } else {
       
     }
@@ -47,6 +51,32 @@ export class DownloadsService {
   }
 
   public async start(chatEntity: any) {
+    if (!this.isDownloadingAChat) {
+      this.isDownloadingAChat = true;
+      this.status = "PROCESSING";
+      const medias = await this.telegram.loadMedias(chatEntity);
+      console.log(medias);
+      this.status = "DOWNLOADING"
+    }
+  }
+}
+
+
+class DownloadableFile {
+
+  filename: string = "file";
+  status: string = "pending";
+  progress: number = 0;
+  completed: boolean = false;
+  color: string = "warning"
+  fileId: any;
+
+  constructor(
+    private telegram: TelegramService,
+    private config: ConfigService,
+    media: any
+  ) {
 
   }
+
 }

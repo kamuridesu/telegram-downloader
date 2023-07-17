@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 
 import { AlertController } from '@ionic/angular';
 
+import { DownloadsService } from '../services/downloads.service';
+
 @Component({
   selector: 'app-downloads',
   templateUrl: './downloads.page.html',
@@ -12,7 +14,8 @@ export class DownloadsPage implements OnInit {
   items: any[] = [];
 
   constructor(
-    private alertController: AlertController
+    private alertController: AlertController,
+    public downloads: DownloadsService
   ) {
     this.items = [
       {
@@ -40,14 +43,13 @@ export class DownloadsPage implements OnInit {
   }
 
   private async sortItems() {
-    const sortOrder: any = ['downloading','completed', 'pending'];
+    const sortOrder: string[] = ['downloading','completed', 'pending'];
     this.items.sort(
-      function(a, b){                              // Pass a function to the sort that takes 2 elements to compare
-          if(a.type == b.type){                    // If the elements both have the same `type`,
-              return a.name.localeCompare(b.name); // Compare the elements by `name`.
-          }else{                                   // Otherwise,
-              return sortOrder.indexOf(a.type) - sortOrder.indexOf(b.type); // Substract indexes, If element `a` comes first in the array, the returned value will be negative, resulting in it being sorted before `b`, and vice versa.
+      (a, b) => {
+          if(a.type == b.type){
+            return a.filename.localeCompare(b.filename);
           }
+          return sortOrder.indexOf(a.type) - sortOrder.indexOf(b.type);
       });
     }
 

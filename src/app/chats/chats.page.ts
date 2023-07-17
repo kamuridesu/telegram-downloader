@@ -121,7 +121,7 @@ export class ChatsPage implements OnInit, OnDestroy {
         {
           text: 'Start',
           handler: () => {
-            console.log(chat);
+            this.downloads.start(chat);
           }
         }
       ]
