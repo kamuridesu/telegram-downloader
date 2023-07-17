@@ -23,6 +23,7 @@ export class DownloadsService {
   ) { }
 
   async init() {
+    console.log("download storage: " + this.configService.DOWNLOAD_STORAGE);
     if (await this.dataService.hasKey(this.KEYNAME)) {
       const savedData = await this.dataService.get(this.KEYNAME);
       this.mediasData = savedData.medias;

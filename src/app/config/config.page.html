@@ -16,6 +16,12 @@
           {{ totalConcurrentDownloads }}
         </ion-label>
       </ion-item>
+      <ion-item button (click)="selectFolder()">
+        <ion-label>Downloads Folder
+          <br />
+          {{ downloadsFolder }}
+        </ion-label>
+      </ion-item>
       <ion-item button (click)="confirmLogout()">
         <ion-label><ion-text color="danger">Logout</ion-text>
         </ion-label>

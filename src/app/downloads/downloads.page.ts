@@ -39,10 +39,26 @@ export class DownloadsPage implements OnInit {
         progress: 1,
         completed: true,
       },
+      {
+        filename: "testsfile3",
+        type: "completed",
+        color: "success",
+        progress: 1,
+        completed: true,
+      },
+      {
+        filename: "testsfile3",
+        type: "completed",
+        color: "success",
+        progress: 1,
+        completed: true,
+      },
     ]
   }
 
   private async sortItems() {
+    console.log(this.downloads.status);
+    this.downloads.status = "DOWNLOADING";
     const sortOrder: string[] = ['downloading','completed', 'pending'];
     this.items.sort(
       (a, b) => {
@@ -78,9 +94,9 @@ export class DownloadsPage implements OnInit {
 
 
   async ionViewWillEnter() {
+    await this.downloads.init();
     setInterval(() => {
       this.sortItems();
     }, 500);
   }
-
 }

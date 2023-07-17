@@ -14,7 +14,9 @@ import { interval, Subscription } from 'rxjs';
   styleUrls: ['./config.page.scss'],
 })
 export class ConfigPage implements OnInit, OnDestroy {
+
   public totalConcurrentDownloads: number = 0;
+  public downloadsFolder: string = "";
   private pollingInterval: number = 5000; // Polling interval in milliseconds
   private pollingSubscription: Subscription | undefined = undefined;
 
@@ -140,6 +142,10 @@ export class ConfigPage implements OnInit, OnDestroy {
     await this.telegram.logOut();
     this.dataService.delete("TELEGRAM_SESSION_STRING");
     this.router.navigate(["/login"], {skipLocationChange: true});
+  }
+
+  async selectFolder() {
+    this.downloadsFolder = await this.configService.getDownloadStorage();
   }
 
   ionViewWillLeave() {

@@ -13,9 +13,11 @@ export class CacheService {
 
   constructor(
     private dataService: DataService
-  ) {
+  ) {}
+
+  public async autoExpire(name: string = this.CACHE_NAME) {
     setInterval(async () => {
-      await this.expireCache();
+      await this.expireCache(undefined, name);
     }, 1000);
   }
 

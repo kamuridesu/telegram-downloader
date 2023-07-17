@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const serve = require('electron-serve');
 
 const loadURL = serve({ directory: __dirname + '/www' }); // Replace 'www' with your Angular build output directory
@@ -6,8 +6,26 @@ const loadURL = serve({ directory: __dirname + '/www' }); // Replace 'www' with 
 // Create the main BrowserWindow
 function createWindow() {
   const win = new BrowserWindow({
-    // Window options
+    webPreferences: {
+      preload: __dirname + "/preload.js",
+      nodeIntegration: true,
+      contextIsolation: false,
+ }
   });
+  ipcMain.on('selectFolder', (event) => {
+    console.log('new event' + event)
+    const options = {
+      properties: ['openDirectory']
+    };
+  
+    dialog.showOpenDialog(win, options).then((result) => {
+      if (!result.canceled && result.filePaths.length > 0) {
+        const folderPath = result.filePaths[0];
+        event.sender.send('folderSelected', folderPath);
+      }
+    });
+  });
+  
 
   // Load the Angular app
   loadURL(win);
@@ -27,3 +45,4 @@ app.on('activate', () => {
     createWindow();
   }
 });
+

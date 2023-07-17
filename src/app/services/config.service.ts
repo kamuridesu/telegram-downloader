@@ -1,6 +1,15 @@
 import { Injectable } from '@angular/core';
 
+import { Platform } from '@ionic/angular';
+
+import {
+  Filesystem, Directory
+} from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
 import { Preferences } from "@capacitor/preferences";
+
+import { ElectronService } from './electron.service';
+
 
 @Injectable({
   providedIn: 'root'
@@ -11,9 +20,16 @@ export class ConfigService {
 
   private MAX_DOWNLOADS_TOTAL: number = 10;
   private CONFIG_STORAGE: string = 'configs';
+  public DOWNLOAD_STORAGE: string = "";
 
-  constructor() {}
+  constructor(
+    private platform: Platform,
+    private electronService: ElectronService,
+  ) {
+    this.DOWNLOAD_STORAGE = Directory.External;
+  }
 
+  
   public async setTotalConcurrentDownloads(newValue: number): Promise<boolean> {
     if (newValue <= this.MAX_DOWNLOADS_TOTAL) {
       this.totalConcurrentDownload = newValue;
@@ -27,12 +43,10 @@ export class ConfigService {
   }
 
   public async getTotalConcurrentDownloads(): Promise<number> {
-    console.log("get from local");
     const { value } = await Preferences.get({
       key: this.CONFIG_STORAGE
     });
     this.totalConcurrentDownload = (value ? JSON.parse(value) : 3);
-    console.log("returning local");
     return this.totalConcurrentDownload;
   }
 
@@ -40,4 +54,13 @@ export class ConfigService {
     return this.MAX_DOWNLOADS_TOTAL;
   }
 
+  public async getDownloadStorage() {
+    let storage: any = "";
+    console.log(this.platform.platforms());
+    if(this.platform.is('electron')) {
+      storage = await this.electronService.selectFolder();
+    }
+    this.DOWNLOAD_STORAGE = storage;
+    return storage;
+  }
 }
