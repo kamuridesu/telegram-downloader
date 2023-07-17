@@ -37,7 +37,7 @@
       <ion-list>
         <ion-item button (click)="presentInputPopup(item)" *ngFor="let item of results; let index">
           <ion-avatar slot="start">
-            <img [src]="item.profilePhoto" alt="avatar" />
+            <img [src]="item.profilePhotoBase64" alt="avatar" />
           </ion-avatar>
           <ion-label>{{ item.title }}</ion-label>
         </ion-item>

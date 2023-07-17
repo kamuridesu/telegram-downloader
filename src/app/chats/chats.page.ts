@@ -42,9 +42,7 @@ export class ChatsPage implements OnInit, OnDestroy {
     return await toast.present()
   }
 
-  async ngOnInit() {
-    
-  }
+  async ngOnInit() {}
 
   async ionViewWillEnter() {
     console.log("CHATS - ViewWillEnter");
@@ -67,7 +65,15 @@ export class ChatsPage implements OnInit, OnDestroy {
         for (let chat of this.chats) {
           for (let image of cachedImages){
             if (JSON.stringify(chat.id) === JSON.stringify(image.channelId)) {
-              chat.profilePhoto = image.image;
+              if (JSON.stringify(chat?.entity?.photo?.id) === JSON.stringify(image.imageId)) {
+                chat.profilePhotoBase64 = image.image;
+              } else {
+                const loadedImage = await this.getProfilePhoto(chat);
+                image.image = loadedImage;
+                image.imageId = chat?.entity?.photo?.id;
+                this.cacheService.setCache(cachedImages);
+                chat.profilePhotoBase64 = loadedImage;
+              }
               break;
             }
           }
@@ -86,18 +92,15 @@ export class ChatsPage implements OnInit, OnDestroy {
     for (let chat of this.chats) {
       count++;
       let image = await this.getProfilePhoto(chat);
-      if (!image.includes("picsum")) {
-        image = `data:image/jpeg;base64,${image}`;
-      }
       images.push({
         image: image,
-        channelId: chat.id
+        channelId: chat.id,
+        imageId: chat?.entity?.photo?.id
       });
-      chat.profilePhoto = image;
+      chat.profilePhotoBase64 = image;
       this.progress = Math.round(count / this.chats.length * 100) / 100;
     }
-    this.cacheService.expireCache(true);
-    this.cacheService.cacheChats(images);
+    this.cacheService.setCache(images);
     this.chatsLoaded = true;
   }
 
@@ -105,9 +108,9 @@ export class ChatsPage implements OnInit, OnDestroy {
     const buffer = await this.telegram.client?.downloadProfilePhoto(chat.entity);
     if (buffer) {
       const encoded = Buffer.from(buffer).toString("base64");
-      return encoded;
+      return `data:image/jpeg;base64,${encoded}`;
     }
-    return "https://picsum.photos/80/80?random="
+    return undefined;
   }
 
   async presentInputPopup(chat: any) {
@@ -126,7 +129,6 @@ export class ChatsPage implements OnInit, OnDestroy {
         }
       ]
     });
-  
     await alert.present();
   }
 
@@ -146,5 +148,4 @@ export class ChatsPage implements OnInit, OnDestroy {
   ngOnDestroy() {
     console.log("Chats - OnDestroy")
   }
-
 }

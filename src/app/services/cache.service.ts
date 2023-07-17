@@ -19,30 +19,30 @@ export class CacheService {
     }, 1000);
   }
 
-  public async cacheChats(chats: any[]) {
-    if (! await this.dataService.hasKey(this.CACHE_NAME)) {
+  public async setCache(chats: any[], name: string = this.CACHE_NAME) {
+    if (! await this.dataService.hasKey(name)) {
       this.cacheCreationDate = Date.now() / 1000;
       const data = JSON.stringify({
         cacheCrationDate: this.cacheCreationDate,
         data: chats
       })
-      await this.dataService.set(this.CACHE_NAME, data);
+      await this.dataService.set(name, data);
     }
   }
 
-  public async getCache() {
-    if (await this.dataService.hasKey(this.CACHE_NAME)) {
-      const data = JSON.parse(await this.dataService.get(this.CACHE_NAME));
+  public async getCache(name: string = this.CACHE_NAME) {
+    if (await this.dataService.hasKey(name)) {
+      const data = JSON.parse(await this.dataService.get(name));
       return data.data;
     }
     return undefined;
   }
 
-  public async expireCache(prune: boolean = false) {
-    if (await this.dataService.hasKey(this.CACHE_NAME)) {
-      const data = JSON.parse(await this.dataService.get(this.CACHE_NAME));
+  public async expireCache(prune: boolean = false, name: string = this.CACHE_NAME) {
+    if (await this.dataService.hasKey(name)) {
+      const data = JSON.parse(await this.dataService.get(name));
       if ((Date.now() / 1000) - data.cacheCrationDate >= this.CACHE_EXPIRATION || prune) {
-        await this.dataService.delete(this.CACHE_NAME);
+        await this.dataService.delete(name);
       }
     }
   }
