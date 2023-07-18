@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { ConfigService } from './config.service';
 import { DataService } from './data.service';
 import TelegramService from './telegram.service';
+import { Buffer } from 'buffer';
 
 @Injectable({
   providedIn: 'root'
@@ -49,6 +50,10 @@ export class DownloadsService {
 
   private async done() {
 
+  }
+
+  public async test() {
+    await this.configService.saveFile('test', 'text/txt', Buffer.from((new TextEncoder()).encode('Hello World')), 0);
   }
 
   public async start(chatEntity: any) {

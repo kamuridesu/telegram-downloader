@@ -37,9 +37,9 @@ export class ConfigPage implements OnInit, OnDestroy {
 
   async ionViewWillEnter() {
     if (!await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
-      console.log("NOT SESSION STIRNG RXISTS");
       this.router.navigate(["/login"]);
     } else {
+      this.downloadsFolder = await this.configService.getDownloadStorage();
       this.startPolling();
     }
   }
@@ -145,7 +145,7 @@ export class ConfigPage implements OnInit, OnDestroy {
   }
 
   async selectFolder() {
-    this.downloadsFolder = await this.configService.getDownloadStorage();
+    this.downloadsFolder = await this.configService.setDownloadStorage();
   }
 
   ionViewWillLeave() {

@@ -11,9 +11,10 @@ function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
  }
+
   });
+
   ipcMain.on('selectFolder', (event) => {
-    console.log('new event' + event)
     const options = {
       properties: ['openDirectory']
     };
@@ -25,8 +26,11 @@ function createWindow() {
       }
     });
   });
-  
 
+  ipcMain.on('receivedFile', (event, data) => {
+    console.log("New file received!");
+  });
+  
   // Load the Angular app
   loadURL(win);
 }
@@ -45,4 +49,3 @@ app.on('activate', () => {
     createWindow();
   }
 });
-
