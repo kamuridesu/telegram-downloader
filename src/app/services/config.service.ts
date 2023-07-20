@@ -3,12 +3,12 @@ import { Injectable } from '@angular/core';
 import { Platform } from '@ionic/angular';
 
 import {
-  Filesystem, Directory
+  Directory
 } from '@capacitor/filesystem';
-import { Capacitor } from '@capacitor/core';
 import { Preferences } from "@capacitor/preferences";
 
 import { ElectronService } from './electron.service';
+import { DataService } from './data.service';
 
 
 @Injectable({
@@ -26,24 +26,29 @@ export class ConfigService {
   constructor(
     private platform: Platform,
     private electronService: ElectronService,
-  ) {}
+    private dataService: DataService,
+  ) {
+    this.dataService.get(this.DOWNLOAD_STORAGE_KEY).then((result) => {
+      this.DOWNLOAD_STORAGE = (result ? JSON.parse(result) : Directory.External);
+    })
+  }
   
   public async setTotalConcurrentDownloads(newValue: number): Promise<boolean> {
     if (newValue <= this.MAX_DOWNLOADS_TOTAL) {
       this.totalConcurrentDownload = newValue;
-      Preferences.set({
-        key: this.CONFIG_STORAGE_KEY,
-        value: JSON.stringify(newValue)
-      })
+      this.dataService.set(
+        this.CONFIG_STORAGE_KEY,
+        JSON.stringify(newValue)
+      )
       return true;
     }
     return false;
   }
 
   public async getTotalConcurrentDownloads(): Promise<number> {
-    const { value } = await Preferences.get({
-      key: this.CONFIG_STORAGE_KEY
-    });
+    const value = await this.dataService.get(
+      this.CONFIG_STORAGE_KEY
+    );
     this.totalConcurrentDownload = (value ? JSON.parse(value) : 3);
     return this.totalConcurrentDownload;
   }
@@ -53,9 +58,9 @@ export class ConfigService {
   }
 
   public async getDownloadStorage() {
-    const { value } = await Preferences.get({
-      key: this.DOWNLOAD_STORAGE_KEY
-    });
+    const value = await this.dataService.get(
+      this.DOWNLOAD_STORAGE_KEY
+    );
     this.DOWNLOAD_STORAGE = (value ? JSON.parse(value) : Directory.External);
     return this.DOWNLOAD_STORAGE;
   }
@@ -67,24 +72,23 @@ export class ConfigService {
       storage = await this.electronService.selectFolder();
     }
     this.DOWNLOAD_STORAGE = storage;
-    Preferences.set({
-      key: this.DOWNLOAD_STORAGE_KEY,
-      value: storage
-    });
+    this.dataService.set(
+      this.DOWNLOAD_STORAGE_KEY,
+      JSON.stringify(storage)
+    );
     return storage;
   }
 
-  public async saveFile(fileName: string, mimeType: string, buffer: any, fileId: any, bufferSize: number = 0, ) {
-    const fileExtension = mimeType.split('/')[1];
+  public async saveFile(fileName: string, buffer: any, bufferSize: number = 0): Promise<boolean> {
     const fileData = {
-      fileName: `${fileName}.${fileExtension}`,
+      fileName: fileName,
       directory: this.DOWNLOAD_STORAGE,
       buffer: buffer,
       bufferSize: bufferSize,
-      fileId: fileId
     }
     if (this.platform.is('electron')) {
       return await this.electronService.sendFile(fileData);
     }
+    return false;
   }
 }

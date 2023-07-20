@@ -2,7 +2,7 @@ import { Buffer } from 'buffer';
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, IonicSafeString, ToastController } from '@ionic/angular';
+import { AlertController, ToastController } from '@ionic/angular';
 
 import { DataService } from '../services/data.service';
 import TelegramService from '../services/telegram.service';
@@ -125,6 +125,7 @@ export class ChatsPage implements OnInit, OnDestroy {
           text: 'Start',
           handler: () => {
             this.downloads.start(chat);
+            this.router.navigate(["/downloads"])
           }
         }
       ]

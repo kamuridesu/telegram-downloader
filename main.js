@@ -1,5 +1,6 @@
 const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const serve = require('electron-serve');
+const fs = require('fs');
 
 const loadURL = serve({ directory: __dirname + '/www' }); // Replace 'www' with your Angular build output directory
 
@@ -27,8 +28,17 @@ function createWindow() {
     });
   });
 
-  ipcMain.on('receivedFile', (event, data) => {
+  ipcMain.on('newFile', (event, data) => {
     console.log("New file received!");
+    const filePath = `${data.directory}/${data.fileName}`
+    let response = false;
+    try {
+      fs.writeFileSync(filePath, data.buffer);
+      response = true;
+    } catch (e) {
+      console.log(e);
+    }
+    event.sender.send("fileSaved", response);
   });
   
   // Load the Angular app

@@ -11,56 +11,17 @@ import { DownloadsService } from '../services/downloads.service';
 })
 export class DownloadsPage implements OnInit {
 
-  items: any[] = [];
-
   constructor(
     private alertController: AlertController,
     public downloads: DownloadsService
   ) {
-    this.items = [
-      {
-        filename: "testsfile1",
-        type: "pending",
-        color: "warning",
-        progress: 0,
-        completed: false,
-      },
-      {
-        filename: "testsfile2",
-        type: "downloading",
-        color: "",
-        progress: 0.5,
-        completed: false,
-      },
-      {
-        filename: "testsfile3",
-        type: "completed",
-        color: "success",
-        progress: 1,
-        completed: true,
-      },
-      {
-        filename: "testsfile3",
-        type: "completed",
-        color: "success",
-        progress: 1,
-        completed: true,
-      },
-      {
-        filename: "testsfile3",
-        type: "completed",
-        color: "success",
-        progress: 1,
-        completed: true,
-      },
-    ]
+    
   }
 
   private async sortItems() {
-    console.log(this.downloads.status);
     this.downloads.status = "DOWNLOADING";
     const sortOrder: string[] = ['downloading','completed', 'pending'];
-    this.items.sort(
+    this.downloads.mediasData.sort(
       (a, b) => {
           if(a.type == b.type){
             return a.filename.localeCompare(b.filename);
@@ -70,6 +31,11 @@ export class DownloadsPage implements OnInit {
     }
 
   ngOnInit() {
+  }
+
+  async testSaveFile() {
+    // await this.downloads.start();
+    await this.downloads.test();
   }
 
   async presentInputPopup(item: any) {
