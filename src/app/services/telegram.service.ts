@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 
+import { BigInteger } from "big-integer";
+
 import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions/StringSession";
 
@@ -113,10 +115,17 @@ export default class TelegramService {
     const medias: any[] = [];
     for (let message of messages) {
       if ((message as any)?.media) {
-        medias.push((message as any)?.media);
+        medias.push((message));
       }
     }
     return medias;
+  }
+
+  public async getMessage(messageId: number, chatEntity: any) {
+    const messages = (await this.client?.getMessages(chatEntity, {
+      ids: [messageId]
+    }));
+    return messages ? messages : [];
   }
 
   public async downloadMedia(mediaEntity: any, progressCallback: any = (() => {})) {

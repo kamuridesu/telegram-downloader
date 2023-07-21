@@ -44,8 +44,9 @@ export class ChatsPage implements OnInit, OnDestroy {
 
   async ngOnInit() {}
 
-  async ionViewWillEnter() {
-    console.log("CHATS - ViewWillEnter");
+  async ionViewWillEnter(): Promise<any> {
+    await this.downloads.init();
+    if (this.downloads.status != "WAITING") return this.router.navigate(["/downloads"]);
     if (this.initializing) return;
     this.initializing = true;
     if (!(await this.dataService.hasKey("TELEGRAM_SESSION_STRING"))) {
@@ -56,9 +57,7 @@ export class ChatsPage implements OnInit, OnDestroy {
       while (this.chats.length < 1) {
         this.chats = await this.telegram.loadChats();
       }
-      console.log(this.chats);
       this.results = [...this.chats];
-      console.log(this.results);
       const cachedImages = await this.cacheService.getCache();
       if (cachedImages && cachedImages.length > 0) {
         this.progress = 1;

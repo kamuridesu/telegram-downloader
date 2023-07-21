@@ -22,7 +22,7 @@ export class DownloadsService {
 
   private bigIntReplacer(key: any, value: any) {
     if (typeof value === 'bigint') {
-      return value.toString(); // Convert BigInt to a string representation
+      return value.toString();
     }
     return value;
   }
@@ -34,56 +34,78 @@ export class DownloadsService {
   ) { }
 
   async init() {
-    console.log("download storage: " + this.configService.DOWNLOAD_STORAGE);
-    if (await this.dataService.hasKey(this.KEYNAME)) {
-      const savedData = await this.dataService.get(this.KEYNAME);
-      this.mediasData = savedData.medias;
-      this.chatInfo = savedData.chatInfo;
-      this.isDownloadingAChat = true;
-      this.status = "DOWNLOADING";
-      this.startDownload();
-    } else {
-      
+    await this.telegram.init();
+    this.configService.init();
+    if (!this.isDownloadingAChat){
+      console.log("download storage: " + this.configService.DOWNLOAD_STORAGE);
+      if (await this.dataService.hasKey(this.KEYNAME)) {
+        this.status = "PROCESSING";
+        const savedDataRaw = await this.dataService.get(this.KEYNAME);
+        const savedData = JSON.parse(savedDataRaw) ? JSON.parse(savedDataRaw) : {}
+        this.chatInfo = savedData.chatInfo;
+        this.mediasData = savedData.mediasData.map((value: any) => {
+          return DownloadableFile.fromJSON(this.telegram, this.configService, value, this.chatInfo);
+        });
+        this.mediasData.forEach(async (value) => await value.getData());
+        console.log(this.mediasData);
+        this.isDownloadingAChat = true;
+        this.status = "DOWNLOADING";
+        this.startDownload();
+      }
     }
   }
 
-  removeFromMediaArray(dlItem: DownloadableFile) {
-    const index = this.mediasData.findIndex(item => item.id === dlItem.id);
-    if (index !== -1) {
-      this.mediasData.splice(index, 1);
-    }
+  private updateCompleted(item: DownloadableFile) {
     this.dataService.set(this.KEYNAME, JSON.stringify({
-      medias: this.mediasData,
+      mediasData: this.mediasData,
       chatInfo: this.chatInfo
     }, this.bigIntReplacer));
-    this.doneFiles.push(dlItem);
   }
 
   private async startDownload() {
-    this.splitArrayIntoBatches()
-    for (let arr of this.BATCH_SIMUL_DOWNLOADABLE) {
-      Promise.all(arr.map((item) => {
-        item.start(this.removeFromMediaArray);
-      }));
+    this.splitArrayIntoBatches();
+    const promises: Promise<void>[] = [];
+    console.log(this.mediasData.length);
+    for (const arr of this.BATCH_SIMUL_DOWNLOADABLE) {
+
+      const batchPromises: Promise<void>[] = [];
+  
+      // Limit the number of concurrent downloads to 10
+      for (let i = 0; i < Math.min(arr.length, 10); i++) {
+        // await arr[i].start();
+
+        batchPromises.push(arr[i].start(this.updateCompleted.bind(this)));
+      }
+  
+      promises.push(Promise.all(batchPromises).then(() => {})); // Add a dummy `.then()` to convert to Promise<void>
     }
-    let ok: any[] = [];
-    let fail: any[] = [];
-    for(let item of this.doneFiles) {
+  
+    await Promise.all(promises);
+  
+    const ok: DownloadableFile[] = [];
+    const fail: DownloadableFile[] = [];
+    for (const item of this.doneFiles) {
       if (item.type === "completed") {
         ok.push(item);
       } else if (item.type === "error") {
         fail.push(item);
       }
     }
-    console.log(`failed: ${fail}`);
-    console.log(`ok: ${ok}`);
+  
+    console.log(`failed: ${fail.length}`);
+    console.log(`ok: ${ok.length}`);
     await this.done();
     await this.dataService.delete(this.KEYNAME);
   }
+  
 
   private splitArrayIntoBatches() {
-    for (let i = 0; i < this.mediasData.length; i += this.BATCH_SIMUL_FILE_LIMIT) {
-      this.BATCH_SIMUL_DOWNLOADABLE.push(this.mediasData.slice(i, i + this.BATCH_SIMUL_FILE_LIMIT));
+    this.BATCH_SIMUL_DOWNLOADABLE = [];
+  
+    const itemsToDownload = this.mediasData.filter(item => !item.completed && item.type !== "error");
+  
+    for (let i = 0; i < itemsToDownload.length; i += this.BATCH_SIMUL_FILE_LIMIT) {
+      this.BATCH_SIMUL_DOWNLOADABLE.push(itemsToDownload.slice(i, i + this.BATCH_SIMUL_FILE_LIMIT));
     }
   }
 
@@ -107,13 +129,16 @@ export class DownloadsService {
     if (!this.isDownloadingAChat) {
       this.isDownloadingAChat = true;
       this.status = "PROCESSING";
-      const medias = await this.telegram.loadMedias(chatEntity);
-      for (let media of medias) {
-        this.mediasData.push(new DownloadableFile(this.telegram, this.configService, media));
-      }
+      const messages = await this.telegram.loadMedias(chatEntity);
       this.chatInfo = chatEntity.id.value;
+      for (let message of messages) {
+        const downloadable = new DownloadableFile(this.telegram, this.configService, message, this.chatInfo);
+        await downloadable.getData();
+        this.mediasData.push(downloadable);
+      }
+      console.log(this.mediasData.forEach((value) => console.log(value.toJSON())));
       this.dataService.set(this.KEYNAME, JSON.stringify({
-        medias: this.mediasData,
+        mediasData: this.mediasData,
         chatInfo: this.chatInfo
       }, this.bigIntReplacer));
       this.status = "DOWNLOADING"
@@ -126,41 +151,57 @@ export class DownloadsService {
 class DownloadableFile {
 
   filename: string = "file";
-  id: any;
+  public id: any;
   type: string = "pending";
   progress: number = 0;
   completed: boolean = false;
   color: string = "warning"
-  media: any;
-  buffer: any;
+  mediaData: any;
+  buffer: Buffer | undefined = undefined;
+  chatId: any;
 
   constructor(
     private telegram: TelegramService,
     private config: ConfigService,
-    media: any
+    message: any,
+    chatId: any
   ) {
-    console.log(media);
-    this.getData(media);
+    console.log(message);
+    if (message.isAlreadySaved) {
+      this.type = message.type;
+      this.progress = message.progress;
+      this.color = message.color;
+      this.completed = message.completed;
+    }
+    this.id = message.id;
+    this.chatId = chatId;
   }
 
   toJSON() {
     return {
-      filename: this.filename,
-      id: this.id,
       type: this.type,
       progress: this.progress,
       color: this.color,
       completed: this.completed,
-      media: this.media,
-      buffer: this.buffer
+      isAlreadySaved: true,
+      id: this.id
     }
   }
 
-  static fromJSON(telegram: TelegramService, config: ConfigService, jsonData: any) {
-    return new this(telegram, config, jsonData.media);
+  static fromJSON(telegram: TelegramService, config: ConfigService, jsonData: any, chatId: any) {
+    console.log("Creaeting new instance with data: " + jsonData);
+    console.log(jsonData.isAlreadySaved);
+    console.log(jsonData.id);
+    console.log(jsonData.completed);
+    return new this(telegram, config, jsonData, chatId);
   }
 
-  private getData(media: any) {
+  public async getData() {
+    const message = await this.telegram.getMessage(this.id, this.chatId);
+    const media: any = message[0]?.media;
+    console.log("MEDIA: START")
+    console.log(message);
+    console.log("MEDIA: END")
     let filename = "";
     let mimetype = "";
 
@@ -170,16 +211,14 @@ class DownloadableFile {
           filename = attr.fileName;
         }
       }
-      this.id = media.document.id.value;
       mimetype = media.document.mimeType;
       if (filename == "") {
-        filename = `${media.document.id.value}.${this.extensionSelector(media.document.mimeType)}`;
+        filename = `${media.document.id.value ? media.document.id.value : media.document.id}.${this.extensionSelector(media.document.mimeType)}`;
       }
     } else if (media.className == "MessageMediaPhoto") {
-      this.id = media.photo.id.value
-      filename = media.photo.id.value + ".jpg";
+      filename = (media.photo.id.value ? media.photo.id.value : media.photo.id) + ".jpg";
     }
-    let extension: string | undefined = ""
+    let extension: string | undefined = "";
     if (mimetype) {
       extension = extension ? extension : "";
     }
@@ -187,6 +226,7 @@ class DownloadableFile {
       console.log(filename);
       console.log(media);
     }
+    this.mediaData = media;
     this.filename = `${filename}`
   }
 
@@ -202,18 +242,23 @@ class DownloadableFile {
     }
   }
 
-  async start(__callback: any) {
+  async start(__callback: any = undefined) {
+    await this.getData();
     this.type = "downloading";
     this.color = "";
-    this.buffer = await this.telegram.client?.downloadMedia(this.media, {
-      progressCallback: ((total, downloaded) => {
+    console.log(this.mediaData);
+    const buffer = await this.telegram.client!.downloadMedia(this.mediaData, {
+      progressCallback: ((downloaded, total) => {
         this.progress = Math.round((downloaded as any) / (total as any) * 100) / 100;
       })
     });
+    console.log(`${this.filename} is donwloaded!`);
+    if (buffer)
+    this.buffer = Buffer.from(buffer);
     this.callback(__callback);
   }
 
-  async callback(done_callback: any) {
+  private async callback(done_callback: any) {
     if (await this.config.saveFile(this.filename, this.buffer)) {
       this.type = "completed";
       this.color = "success";
@@ -225,6 +270,8 @@ class DownloadableFile {
       this.progress = 0;
       this.completed = false;
     }
-    done_callback(this);
+    if (done_callback) {
+      done_callback(this);
+    }
   }
 }

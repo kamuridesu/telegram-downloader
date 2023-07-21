@@ -1,6 +1,6 @@
 {
     "watch": ["src"],
-    "ext": "ts",
+    "ext": "ts,html",
     "ignore": ["www/"],
     "exec": "ionic build && npm run electron"
   }

@@ -27,7 +27,7 @@
   <ion-content>
     <div id="container">
       <div *ngIf="downloads.status === 'DOWNLOADING'">
-        <ion-list button *ngFor="let item of downloads.mediasData; let index">
+        <ion-list button *ngFor="let item of items; let index">
           <ion-item>
             <ion-col>
               <ion-text color="{{ item.color }}">{{item.filename}}</ion-text>

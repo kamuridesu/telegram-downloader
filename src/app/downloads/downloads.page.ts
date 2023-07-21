@@ -11,6 +11,8 @@ import { DownloadsService } from '../services/downloads.service';
 })
 export class DownloadsPage implements OnInit {
 
+  public items: any[] = [];
+
   constructor(
     private alertController: AlertController,
     public downloads: DownloadsService
@@ -19,9 +21,9 @@ export class DownloadsPage implements OnInit {
   }
 
   private async sortItems() {
-    this.downloads.status = "DOWNLOADING";
-    const sortOrder: string[] = ['downloading','completed', 'error', 'pending'];
-    this.downloads.mediasData.sort(
+    this.items = [...this.downloads.mediasData];
+    const sortOrder: string[] = ['downloading', 'pending', 'completed', 'error'];
+    this.items.sort(
       (a, b) => {
           if(a.type == b.type){
             return a.filename.localeCompare(b.filename);

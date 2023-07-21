@@ -21,17 +21,20 @@ export class ConfigService {
   private MAX_DOWNLOADS_TOTAL: number = 10;
   private CONFIG_STORAGE_KEY: string = 'configs';
   public DOWNLOAD_STORAGE: string = "";
-  private DOWNLOAD_STORAGE_KEY: string = "";
+  private DOWNLOAD_STORAGE_KEY: string = "DOWNLOADS_STORAGE";
 
   constructor(
     private platform: Platform,
     private electronService: ElectronService,
     private dataService: DataService,
   ) {
-    this.dataService.get(this.DOWNLOAD_STORAGE_KEY).then((result) => {
-      this.DOWNLOAD_STORAGE = (result ? JSON.parse(result) : Directory.External);
-      console.log(this.DOWNLOAD_STORAGE);
-    })
+    this.init();
+  }
+
+  public async init() {
+    console.log("init config service");
+    await this.getDownloadStorage();
+    console.log(this.DOWNLOAD_STORAGE);
   }
   
   public async setTotalConcurrentDownloads(newValue: number): Promise<boolean> {
