@@ -84,7 +84,7 @@
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "stream-browserify": "^3.0.0",
-    "ts-node": "^8.3.0",
+    "ts-node": "^8.10.2",
     "typescript": "~5.0.2",
     "util": "^0.12.5"
   },

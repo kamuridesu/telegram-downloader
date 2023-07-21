@@ -20,7 +20,7 @@ export class DownloadsPage implements OnInit {
 
   private async sortItems() {
     this.downloads.status = "DOWNLOADING";
-    const sortOrder: string[] = ['downloading','completed', 'pending'];
+    const sortOrder: string[] = ['downloading','completed', 'error', 'pending'];
     this.downloads.mediasData.sort(
       (a, b) => {
           if(a.type == b.type){

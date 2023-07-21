@@ -30,6 +30,7 @@ export class ConfigService {
   ) {
     this.dataService.get(this.DOWNLOAD_STORAGE_KEY).then((result) => {
       this.DOWNLOAD_STORAGE = (result ? JSON.parse(result) : Directory.External);
+      console.log(this.DOWNLOAD_STORAGE);
     })
   }
   
