@@ -14,7 +14,7 @@ export class DownloadsService {
   private isDownloadingAChat: boolean = false;
   public mediasData: DownloadableFile[] = [];
   private chatInfo: any;
-  private BATCH_SIMUL_FILE_LIMIT = 10;
+  private BATCH_SIMUL_FILE_LIMIT = 3;
   private BATCH_SIMUL_DOWNLOADABLE: DownloadableFile[][] = [];
   private doneFiles: DownloadableFile[] = [];
 
@@ -36,6 +36,9 @@ export class DownloadsService {
   async init() {
     await this.telegram.init();
     this.configService.init();
+    setInterval(async () => {
+      this.BATCH_SIMUL_FILE_LIMIT = await this.configService.getTotalConcurrentDownloads();
+    }, 500);
     if (!this.isDownloadingAChat){
       console.log("download storage: " + this.configService.DOWNLOAD_STORAGE);
       if (await this.dataService.hasKey(this.KEYNAME)) {
@@ -64,22 +67,15 @@ export class DownloadsService {
 
   private async startDownload() {
     this.splitArrayIntoBatches();
-    const promises: Promise<void>[] = [];
+    const promises: void[][] = [];
     console.log(this.mediasData.length);
     for (const arr of this.BATCH_SIMUL_DOWNLOADABLE) {
-
       const batchPromises: Promise<void>[] = [];
-  
-      // Limit the number of concurrent downloads to 10
-      for (let i = 0; i < Math.min(arr.length, 10); i++) {
-        // await arr[i].start();
-
+      for (let i = 0; i < Math.min(arr.length, this.BATCH_SIMUL_FILE_LIMIT); i++) {
         batchPromises.push(arr[i].start(this.updateCompleted.bind(this)));
       }
-  
-      promises.push(Promise.all(batchPromises).then(() => {})); // Add a dummy `.then()` to convert to Promise<void>
+      promises.push(await Promise.all(batchPromises));
     }
-  
     await Promise.all(promises);
   
     const ok: DownloadableFile[] = [];
@@ -97,7 +93,6 @@ export class DownloadsService {
     await this.done();
     await this.dataService.delete(this.KEYNAME);
   }
-  
 
   private splitArrayIntoBatches() {
     this.BATCH_SIMUL_DOWNLOADABLE = [];
@@ -133,10 +128,9 @@ export class DownloadsService {
       this.chatInfo = chatEntity.id.value;
       for (let message of messages) {
         const downloadable = new DownloadableFile(this.telegram, this.configService, message, this.chatInfo);
-        await downloadable.getData();
+        await downloadable.getData(message);
         this.mediasData.push(downloadable);
       }
-      console.log(this.mediasData.forEach((value) => console.log(value.toJSON())));
       this.dataService.set(this.KEYNAME, JSON.stringify({
         mediasData: this.mediasData,
         chatInfo: this.chatInfo
@@ -168,10 +162,10 @@ class DownloadableFile {
   ) {
     console.log(message);
     if (message.isAlreadySaved) {
-      this.type = message.type;
-      this.progress = message.progress;
+      this.type = message.type == "completed" ? "completed" : "pending";
+      this.progress = message.progress == 100 ? 100 : 0;
       this.color = message.color;
-      this.completed = message.completed;
+      this.completed = message.completed ? true : false;
     }
     this.id = message.id;
     this.chatId = chatId;
@@ -196,9 +190,9 @@ class DownloadableFile {
     return new this(telegram, config, jsonData, chatId);
   }
 
-  public async getData() {
-    const message = await this.telegram.getMessage(this.id, this.chatId);
-    const media: any = message[0]?.media;
+  public async getData(message: any = undefined) {
+    if (message == undefined) message = (await this.telegram.getMessage(this.id, this.chatId))[0];
+    const media: any = message.media;
     console.log("MEDIA: START")
     console.log(message);
     console.log("MEDIA: END")
