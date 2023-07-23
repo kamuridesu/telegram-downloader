@@ -62,7 +62,6 @@ export class ConfigPage implements OnInit, OnDestroy {
   }
 
   getTotalConcurrentDownloads() {
-    console.log("getting values");
     this.configService.getTotalConcurrentDownloads().then((value) => {
       this.totalConcurrentDownloads = value;
     }).catch(() => {

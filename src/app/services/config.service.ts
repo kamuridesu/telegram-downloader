@@ -32,9 +32,7 @@ export class ConfigService {
   }
 
   public async init() {
-    console.log("init config service");
     await this.getDownloadStorage();
-    console.log(this.DOWNLOAD_STORAGE);
   }
   
   public async setTotalConcurrentDownloads(newValue: number): Promise<boolean> {
@@ -71,7 +69,6 @@ export class ConfigService {
 
   public async setDownloadStorage() {
     let storage: any = "";
-    console.log(this.platform.platforms());
     if(this.platform.is('electron')) {
       storage = await this.electronService.selectFolder();
     }

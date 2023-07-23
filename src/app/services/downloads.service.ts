@@ -4,6 +4,7 @@ import { ConfigService } from './config.service';
 import { DataService } from './data.service';
 import TelegramService from './telegram.service';
 import { Buffer } from 'buffer';
+import { QueueService } from './queue.service';
 
 @Injectable({
   providedIn: 'root'
@@ -50,7 +51,6 @@ export class DownloadsService {
           return DownloadableFile.fromJSON(this.telegram, this.configService, value, this.chatInfo);
         });
         this.mediasData.forEach(async (value) => await value.getData());
-        console.log(this.mediasData);
         this.isDownloadingAChat = true;
         this.status = "DOWNLOADING";
         this.startDownload();
@@ -68,7 +68,6 @@ export class DownloadsService {
   private async startDownload() {
     this.splitArrayIntoBatches();
     const promises: void[][] = [];
-    console.log(this.mediasData.length);
     for (const arr of this.BATCH_SIMUL_DOWNLOADABLE) {
       const batchPromises: Promise<void>[] = [];
       for (let i = 0; i < Math.min(arr.length, this.BATCH_SIMUL_FILE_LIMIT); i++) {
@@ -116,11 +115,9 @@ export class DownloadsService {
     this.status = "WAITING";
   }
 
-  public async test() {
-    await this.configService.saveFile('test.txt', Buffer.from((new TextEncoder()).encode('Hello World')));
-  }
 
   public async start(chatEntity: any) {
+    await this.telegram.init();
     if (!this.isDownloadingAChat) {
       this.isDownloadingAChat = true;
       this.status = "PROCESSING";
@@ -160,10 +157,9 @@ class DownloadableFile {
     message: any,
     chatId: any
   ) {
-    console.log(message);
     if (message.isAlreadySaved) {
       this.type = message.type == "completed" ? "completed" : "pending";
-      this.progress = message.progress == 100 ? 100 : 0;
+      this.progress = message.progress >= 1 ? 1 : 0;
       this.color = message.color;
       this.completed = message.completed ? true : false;
     }
@@ -183,19 +179,12 @@ class DownloadableFile {
   }
 
   static fromJSON(telegram: TelegramService, config: ConfigService, jsonData: any, chatId: any) {
-    console.log("Creaeting new instance with data: " + jsonData);
-    console.log(jsonData.isAlreadySaved);
-    console.log(jsonData.id);
-    console.log(jsonData.completed);
     return new this(telegram, config, jsonData, chatId);
   }
 
   public async getData(message: any = undefined) {
     if (message == undefined) message = (await this.telegram.getMessage(this.id, this.chatId))[0];
     const media: any = message.media;
-    console.log("MEDIA: START")
-    console.log(message);
-    console.log("MEDIA: END")
     let filename = "";
     let mimetype = "";
 
@@ -240,13 +229,11 @@ class DownloadableFile {
     await this.getData();
     this.type = "downloading";
     this.color = "";
-    console.log(this.mediaData);
     const buffer = await this.telegram.client!.downloadMedia(this.mediaData, {
       progressCallback: ((downloaded, total) => {
         this.progress = Math.round((downloaded as any) / (total as any) * 100) / 100;
       })
     });
-    console.log(`${this.filename} is donwloaded!`);
     if (buffer)
     this.buffer = Buffer.from(buffer);
     this.callback(__callback);

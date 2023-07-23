@@ -1,6 +1,7 @@
-const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, Tray } = require('electron');
 const serve = require('electron-serve');
 const fs = require('fs');
+const path = require('path');
 
 const loadURL = serve({ directory: __dirname + '/www' }); // Replace 'www' with your Angular build output directory
 
@@ -39,6 +40,16 @@ function createWindow() {
       console.log(e);
     }
     event.sender.send("fileSaved", response);
+  });
+
+  const tray = new Tray(path.join(__dirname, 'www/assets/tray-icon.ico'));
+  tray.setToolTip("Telegram Downloader");
+  tray.on('click', () => {
+    if(win.isVisible()) {
+      win.hide();
+    } else {
+      win.show();
+    }
   });
   
   // Load the Angular app

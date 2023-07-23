@@ -14,31 +14,25 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     if (await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
-      console.log("SESSION STIRNG RXISTS");
       this.router.navigate(["/chats"]);
     } else {
-      console.log("NOT SESSION STIRNG RXISTS");
       this.router.navigate(["/phonelogin"]);
     }
   }
 
   ngOnDestroy() {
-    console.log("LoginPage - OnDestroy")
   }
     
 
   async ionViewWillEnter() {
     if (await this.dataService.hasKey("TELEGRAM_SESSION_STRING")) {
-      console.log("SESSION STIRNG RXISTS");
       this.router.navigate(["/chats"]);
     } else {
-      console.log("NOT SESSION STIRNG RXISTS");
       this.router.navigate(["/phonelogin"]);
     }
   }
 
   ionViewWillLeave() {
-    console.log("LoginPage - ViewWillLeave")
   }
 
 }

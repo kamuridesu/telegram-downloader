@@ -35,11 +35,6 @@ export class DownloadsPage implements OnInit {
   ngOnInit() {
   }
 
-  async testSaveFile() {
-    // await this.downloads.start();
-    await this.downloads.test();
-  }
-
   async presentInputPopup(item: any) {
     const alert = await this.alertController.create({
       header: `Are you sure you want to delete ${item.filename}?`,
