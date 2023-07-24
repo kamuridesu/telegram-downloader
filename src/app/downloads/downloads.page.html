@@ -55,10 +55,13 @@
               <ion-text color="{{ item.color }}">{{item.filename}}</ion-text>
               <ion-progress-bar [value]="item.progress"></ion-progress-bar>
             </ion-col>
-            <ion-button (click)="presentInputPopup(item)" *ngIf="!item.completed" size="small">Delete</ion-button>
+            <ion-button (click)="removeItemPopUp(item)" *ngIf="!item.completed" size="small">Delete</ion-button>
           </ion-item>
         </ion-list>
         <ion-item *ngIf="downloads.mediasData.length > MAX_SHOW_ITEMS">And more {{ downloads.mediasData.length - items.length }} items...</ion-item>
+        <ion-item button (click)="stopDownloadsPopUp()">
+            <ion-text color="danger">Stop Download</ion-text>
+        </ion-item>
       </div>
       <ion-item *ngIf="downloads.status === 'PROCESSING'">
         <ion-col>

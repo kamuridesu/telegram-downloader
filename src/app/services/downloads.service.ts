@@ -72,6 +72,7 @@ export class DownloadsService {
   private async startDownload() {
     this.splitArrayIntoBatches();
     const promises: void[][] = [];
+    this.status = "DOWNLOADING"
     for (const arr of this.BATCH_SIMUL_DOWNLOADABLE) {
       const batchPromises: Promise<void>[] = [];
       for (let i = 0; i < Math.min(arr.length, this.BATCH_SIMUL_FILE_LIMIT); i++) {
@@ -97,6 +98,8 @@ export class DownloadsService {
   private async done() {
     this.status = "WAITING";
     await this.dataService.delete(this.KEYNAME);
+    this.mediasData = [];
+    this.isDownloadingAChat = false;
   }
 
   public async start(chatEntity: any) {
@@ -115,7 +118,6 @@ export class DownloadsService {
         mediasData: this.mediasData,
         chatInfo: this.chatInfo
       }, this.bigIntReplacer));
-      this.status = "DOWNLOADING"
       this.startDownload();
     }
   }
@@ -127,6 +129,16 @@ export class DownloadsService {
       item.cancel();
       this.updateCompleted(item);
     }
+  }
+
+  public async cancelAll() {
+    for (let item of this.mediasData) {
+      item.cancel();
+    }
+    this.mediasData = [];
+    this.status = "WAITING";
+    this.isDownloadingAChat = false;
+    await this.dataService.delete(this.KEYNAME);
   }
 }
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import { BigInteger } from "big-integer";
+import { environment } from 'src/environments/environment';
 
 import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions/StringSession";
@@ -12,7 +12,7 @@ import { DataService } from './data.service';
 })
 export default class TelegramService {
   private apiId: number = 0;
-  private apiHash: string = " ";
+  private apiHash: string = ;
   private stringSession: StringSession = new StringSession("");
   private phoneNumber: string | undefined = undefined
   private phoneNumberHash: string | undefined = undefined;

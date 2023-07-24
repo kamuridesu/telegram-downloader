@@ -1,7 +1,6 @@
 const { app, BrowserWindow, dialog, ipcMain, Tray } = require('electron');
 const serve = require('electron-serve');
 const fs = require('fs');
-const { platform } = require('os');
 const path = require('path');
 
 const loadURL = serve({ directory: __dirname + '/www' }); // Replace 'www' with your Angular build output directory

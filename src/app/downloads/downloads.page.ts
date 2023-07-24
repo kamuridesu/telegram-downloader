@@ -47,7 +47,7 @@ export class DownloadsPage implements OnInit {
   ngOnInit() {
   }
 
-  async presentInputPopup(item: any) {
+  async removeItemPopUp(item: any) {
     const alert = await this.alertController.create({
       header: `Are you sure you want to delete ${item.filename}?`,
       buttons: [
@@ -67,11 +67,31 @@ export class DownloadsPage implements OnInit {
     await alert.present();
   }
 
+  async stopDownloadsPopUp() {
+    const alert = await this.alertController.create({
+      header: `Are you sure you want to stop all downloads?`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Delete All',
+          handler: async () => {
+            await this.downloads.cancelAll();
+            return this.router.navigate(["/chats"])
+          },
+        }
+      ]
+    });
+  
+    await alert.present();
+  }
 
   async ionViewWillEnter(): Promise<any> {
     await this.downloads.init();
 
-    if (this.downloads.status != "WAITING") return this.router.navigate(["/chats"]);
+    if (this.downloads.status == "WAITING") return this.router.navigate(["/chats"]);
 
     setInterval(() => {
       this.sortItems();
