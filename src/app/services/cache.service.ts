@@ -18,7 +18,7 @@ export class CacheService {
   public async autoExpire(name: string = this.CACHE_NAME) {
     setInterval(async () => {
       await this.expireCache(undefined, name);
-    }, 1000);
+    }, 5000);
   }
 
   public async setCache(chats: any[], name: string = this.CACHE_NAME) {

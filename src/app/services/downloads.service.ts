@@ -1,24 +1,24 @@
 import { Injectable } from '@angular/core';
 
+import bigInt from 'big-integer';
+
 import { ConfigService } from './config.service';
 import { DataService } from './data.service';
 import TelegramService from './telegram.service';
 import { Buffer } from 'buffer';
-import { QueueService } from './queue.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DownloadsService {
 
-  private KEYNAME = "TELEGRAM_DOWNLOADING";
-  private isDownloadingAChat: boolean = false;
-  public mediasData: DownloadableFile[] = [];
-  private chatInfo: any;
-  private BATCH_SIMUL_FILE_LIMIT = 3;
+  private readonly KEYNAME = "TELEGRAM_DOWNLOADING";
   private BATCH_SIMUL_DOWNLOADABLE: DownloadableFile[][] = [];
-  private doneFiles: DownloadableFile[] = [];
+  private isDownloadingAChat: boolean = false;
+  private BATCH_SIMUL_FILE_LIMIT = 3;
+  private chatInfo: any;
 
+  public mediasData: DownloadableFile[] = [];
   public status: string = "WAITING";
 
   private bigIntReplacer(key: any, value: any) {
@@ -37,28 +37,32 @@ export class DownloadsService {
   async init() {
     await this.telegram.init();
     this.configService.init();
+    this.BATCH_SIMUL_FILE_LIMIT = await this.configService.getTotalConcurrentDownloads();
     setInterval(async () => {
-      this.BATCH_SIMUL_FILE_LIMIT = await this.configService.getTotalConcurrentDownloads();
-    }, 500);
-    if (!this.isDownloadingAChat){
-      console.log("download storage: " + this.configService.DOWNLOAD_STORAGE);
-      if (await this.dataService.hasKey(this.KEYNAME)) {
-        this.status = "PROCESSING";
-        const savedDataRaw = await this.dataService.get(this.KEYNAME);
-        const savedData = JSON.parse(savedDataRaw) ? JSON.parse(savedDataRaw) : {}
-        this.chatInfo = savedData.chatInfo;
-        this.mediasData = savedData.mediasData.map((value: any) => {
-          return DownloadableFile.fromJSON(this.telegram, this.configService, value, this.chatInfo);
-        });
-        this.mediasData.forEach(async (value) => await value.getData());
-        this.isDownloadingAChat = true;
-        this.status = "DOWNLOADING";
-        this.startDownload();
+      const newLimit = await this.configService.getTotalConcurrentDownloads();
+      if (newLimit != this.BATCH_SIMUL_FILE_LIMIT) {
+        this.BATCH_SIMUL_FILE_LIMIT = newLimit;
+        window.location.reload();
       }
+    }, 5000);
+    if (!this.isDownloadingAChat && await this.dataService.hasKey(this.KEYNAME)){
+      this.status = "PROCESSING";
+      const savedDataRaw = await this.dataService.get(this.KEYNAME);
+      const savedData = JSON.parse(savedDataRaw) ? JSON.parse(savedDataRaw) : {}
+      this.chatInfo = bigInt(savedData.chatInfo);
+      this.mediasData = savedData.mediasData.map((value: any) => {
+        return DownloadableFile.fromJSON(this.telegram, this.configService, value, this.chatInfo);
+      });
+      if (! await this.telegram.checkConnection()) {
+        await this.telegram.connect();
+      }
+      this.isDownloadingAChat = true;
+      this.status = "DOWNLOADING";
+      this.startDownload();
     }
   }
 
-  private updateCompleted(item: DownloadableFile) {
+  private updateCompleted(_: any = undefined) {
     this.dataService.set(this.KEYNAME, JSON.stringify({
       mediasData: this.mediasData,
       chatInfo: this.chatInfo
@@ -77,20 +81,7 @@ export class DownloadsService {
     }
     await Promise.all(promises);
   
-    const ok: DownloadableFile[] = [];
-    const fail: DownloadableFile[] = [];
-    for (const item of this.doneFiles) {
-      if (item.type === "completed") {
-        ok.push(item);
-      } else if (item.type === "error") {
-        fail.push(item);
-      }
-    }
-  
-    console.log(`failed: ${fail.length}`);
-    console.log(`ok: ${ok.length}`);
     await this.done();
-    await this.dataService.delete(this.KEYNAME);
   }
 
   private splitArrayIntoBatches() {
@@ -103,21 +94,13 @@ export class DownloadsService {
     }
   }
 
-  private async downloadFinished() {
-
-  }
-
-  private async clearPending() {
-
-  }
-
   private async done() {
     this.status = "WAITING";
+    await this.dataService.delete(this.KEYNAME);
   }
 
-
   public async start(chatEntity: any) {
-    await this.telegram.init();
+    await this.telegram.connect();
     if (!this.isDownloadingAChat) {
       this.isDownloadingAChat = true;
       this.status = "PROCESSING";
@@ -136,20 +119,29 @@ export class DownloadsService {
       this.startDownload();
     }
   }
-}
 
+  public async deleteItem(item: DownloadableFile) {
+    const index = this.mediasData.indexOf(item);
+    if (index > -1) {
+      this.mediasData.splice(index, 1);
+      item.cancel();
+      this.updateCompleted(item);
+    }
+  }
+}
 
 class DownloadableFile {
 
-  filename: string = "file";
+  public filename: string = "file";
   public id: any;
-  type: string = "pending";
-  progress: number = 0;
-  completed: boolean = false;
-  color: string = "warning"
-  mediaData: any;
-  buffer: Buffer | undefined = undefined;
-  chatId: any;
+  public type: string = "pending";
+  public progress: number = 0;
+  public completed: boolean = false;
+  public color: string = "warning"
+  private mediaData: any;
+  private buffer: Buffer | undefined = undefined;
+  private chatId: any;
+  private isCancelled: boolean = false;
 
   constructor(
     private telegram: TelegramService,
@@ -162,6 +154,7 @@ class DownloadableFile {
       this.progress = message.progress >= 1 ? 1 : 0;
       this.color = message.color;
       this.completed = message.completed ? true : false;
+      this.filename = message.filename ? message.filename : "file";
     }
     this.id = message.id;
     this.chatId = chatId;
@@ -169,6 +162,7 @@ class DownloadableFile {
 
   toJSON() {
     return {
+      filename: this.filename,
       type: this.type,
       progress: this.progress,
       color: this.color,
@@ -183,10 +177,14 @@ class DownloadableFile {
   }
 
   public async getData(message: any = undefined) {
-    if (message == undefined) message = (await this.telegram.getMessage(this.id, this.chatId))[0];
+    if (message == undefined){
+      if (!await this.telegram.checkConnection()) {
+        await this.telegram.connect();
+      }
+      message = (await this.telegram.getMessage(this.id, bigInt(this.chatId)))[0];
+    }
     const media: any = message.media;
     let filename = "";
-    let mimetype = "";
 
     if (media.document) {
       for (let attr of media.document.attributes) {
@@ -194,23 +192,18 @@ class DownloadableFile {
           filename = attr.fileName;
         }
       }
-      mimetype = media.document.mimeType;
       if (filename == "") {
         filename = `${media.document.id.value ? media.document.id.value : media.document.id}.${this.extensionSelector(media.document.mimeType)}`;
       }
     } else if (media.className == "MessageMediaPhoto") {
       filename = (media.photo.id.value ? media.photo.id.value : media.photo.id) + ".jpg";
     }
-    let extension: string | undefined = "";
-    if (mimetype) {
-      extension = extension ? extension : "";
-    }
     if (filename == "") {
       console.log(filename);
       console.log(media);
     }
     this.mediaData = media;
-    this.filename = `${filename}`
+    this.filename = `${filename}`;
   }
 
   private extensionSelector(mimeType: string) {
@@ -221,11 +214,21 @@ class DownloadableFile {
       case "quicktime":
         return "mov";
       default:
-        return "mp4"
+        return "mp4";
     }
   }
 
+  public cancel() {
+    this.isCancelled = true;
+  }
+
   async start(__callback: any = undefined) {
+    if (this.isCancelled) {
+      return;
+    }
+    if (! await this.telegram.checkConnection()) {
+      await this.telegram.connect();
+    }
     await this.getData();
     this.type = "downloading";
     this.color = "";
@@ -234,12 +237,19 @@ class DownloadableFile {
         this.progress = Math.round((downloaded as any) / (total as any) * 100) / 100;
       })
     });
-    if (buffer)
-    this.buffer = Buffer.from(buffer);
+    if (this.isCancelled) {
+      return;
+    }
+    if (buffer) {
+      this.buffer = Buffer.from(buffer);
+    }
     this.callback(__callback);
   }
 
   private async callback(done_callback: any) {
+    if (this.isCancelled) {
+      return;
+    }
     if (await this.config.saveFile(this.filename, this.buffer)) {
       this.type = "completed";
       this.color = "success";

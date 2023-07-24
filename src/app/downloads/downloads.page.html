@@ -27,6 +27,28 @@
   <ion-content>
     <div id="container">
       <div *ngIf="downloads.status === 'DOWNLOADING'">
+        <ion-row>
+          <ion-col>
+            <ion-item>
+              Downloading: {{ downloading }}
+            </ion-item>
+          </ion-col>
+          <ion-col>
+            <ion-item>
+              Pending: {{ pending }}
+            </ion-item>
+          </ion-col>
+          <ion-col>
+            <ion-item>
+              Completed: {{ completed }}
+            </ion-item>
+          </ion-col>
+          <ion-col>
+            <ion-item>
+              Error: {{ error }}
+            </ion-item>
+          </ion-col>
+        </ion-row>
         <ion-list button *ngFor="let item of items; let index">
           <ion-item>
             <ion-col>
@@ -36,6 +58,7 @@
             <ion-button (click)="presentInputPopup(item)" *ngIf="!item.completed" size="small">Delete</ion-button>
           </ion-item>
         </ion-list>
+        <ion-item *ngIf="downloads.mediasData.length > MAX_SHOW_ITEMS">And more {{ downloads.mediasData.length - items.length }} items...</ion-item>
       </div>
       <ion-item *ngIf="downloads.status === 'PROCESSING'">
         <ion-col>

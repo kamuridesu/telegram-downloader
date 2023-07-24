@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 import { AlertController } from '@ionic/angular';
+import { Router } from '@angular/router';
 
 import { DownloadsService } from '../services/downloads.service';
 
@@ -12,16 +13,26 @@ import { DownloadsService } from '../services/downloads.service';
 export class DownloadsPage implements OnInit {
 
   public items: any[] = [];
+  public pending: number = 0;
+  public completed: number = 0;
+  public downloading: number = 0;
+  public error: number = 0;
+  public MAX_SHOW_ITEMS = 100;
 
   constructor(
     private alertController: AlertController,
-    public downloads: DownloadsService
+    private router: Router,
+    public downloads: DownloadsService,
   ) {
     
   }
 
   private async sortItems() {
     this.items = [...this.downloads.mediasData];
+    this.error = this.downloads.mediasData.filter(value => value.type == "error").length
+    this.pending = this.downloads.mediasData.filter(value => value.type == "pending").length
+    this.completed = this.downloads.mediasData.filter(value => value.type == "completed").length
+    this.downloading = this.downloads.mediasData.filter(value => value.type == "downloading").length
     const sortOrder: string[] = ['downloading', 'pending', 'completed', 'error'];
     this.items.sort(
       (a, b) => {
@@ -29,8 +40,9 @@ export class DownloadsPage implements OnInit {
             return a.filename.localeCompare(b.filename);
           }
           return sortOrder.indexOf(a.type) - sortOrder.indexOf(b.type);
-      });
-    }
+    });
+    this.items = this.items.slice(0, this.MAX_SHOW_ITEMS);
+  }
 
   ngOnInit() {
   }
@@ -46,7 +58,7 @@ export class DownloadsPage implements OnInit {
         {
           text: 'Delete',
           handler: () => {
-            console.log(item);
+            this.downloads.deleteItem(item);
           },
         }
       ]
@@ -56,10 +68,13 @@ export class DownloadsPage implements OnInit {
   }
 
 
-  async ionViewWillEnter() {
+  async ionViewWillEnter(): Promise<any> {
     await this.downloads.init();
+
+    if (this.downloads.status != "WAITING") return this.router.navigate(["/chats"]);
+
     setInterval(() => {
       this.sortItems();
-    }, 500);
+    }, 2000);
   }
 }

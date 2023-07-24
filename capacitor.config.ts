@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'telegram_downloader',
+  appId: 'com.kamuri.tldl',
+  appName: 'Telegram Downloader',
   webDir: 'www',
   server: {
     androidScheme: 'https'

@@ -31,10 +31,36 @@ export default class TelegramService {
     }
     this.client = new TelegramClient(this.stringSession, this.apiId, this.apiHash, {
       connectionRetries: 5,
+      autoReconnect: true,
+      downloadRetries: 10,
     });
     await this.client.connect();
     if (await this.client.isUserAuthorized()) {
       this.loggedIn = true;
+    }
+  }
+
+  async connect() {
+    try {
+      await this.client?.connect();
+      await this.client?.getMe();
+    } catch (e) {
+      console.warn(e);
+      await this.init();
+    }
+  }
+
+  async checkConnection(retries: number = 0): Promise<boolean> {
+    try {
+      await this.client?.getMe();
+      return true;
+    } catch (e) {
+      if (retries === 10) {
+        return false;
+      } else {
+        await this.connect();
+        return this.checkConnection(retries++);
+      }
     }
   }
 
@@ -111,10 +137,11 @@ export default class TelegramService {
   }
 
   public async loadMedias(chatEntity: any) {
+    await this.checkConnection();
     const messages = await this.loadMessages(chatEntity);
     const medias: any[] = [];
     for (let message of messages) {
-      if ((message as any)?.media) {
+      if ((message as any)?.media && (message as any).media.className != "MessageMediaWebPage") {
         medias.push((message));
       }
     }
@@ -122,6 +149,9 @@ export default class TelegramService {
   }
 
   public async getMessage(messageId: number, chatEntity: any) {
+    if (! await this.checkConnection()) {
+      await this.connect();
+    }
     const messages = (await this.client?.getMessages(chatEntity, {
       ids: [messageId]
     }));

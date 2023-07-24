@@ -1,6 +1,7 @@
 const { app, BrowserWindow, dialog, ipcMain, Tray } = require('electron');
 const serve = require('electron-serve');
 const fs = require('fs');
+const { platform } = require('os');
 const path = require('path');
 
 const loadURL = serve({ directory: __dirname + '/www' }); // Replace 'www' with your Angular build output directory
@@ -42,7 +43,12 @@ function createWindow() {
     event.sender.send("fileSaved", response);
   });
 
-  const tray = new Tray(path.join(__dirname, 'www/assets/tray-icon.ico'));
+  let tray = undefined;
+  if (process.platform == 'win32') {
+    tray = new Tray(path.join(__dirname, 'www/assets/tray-icon.ico'));
+  } else if (process.platform == 'linux') {
+    tray = new Tray(path.join(__dirname, 'www/assets/icon/favicon.png'));
+  }
   tray.setToolTip("Telegram Downloader");
   tray.on('click', () => {
     if(win.isVisible()) {
