@@ -11,8 +11,8 @@ import { DataService } from './data.service';
   providedIn: 'root'
 })
 export default class TelegramService {
-  private apiId: number = 0;
-  private apiHash: string = '';
+  private apiId: number = environment.apiId;
+  private apiHash: string = environment.apiHash;
   private stringSession: StringSession = new StringSession("");
   private phoneNumber: string | undefined = undefined
   private phoneNumberHash: string | undefined = undefined;
