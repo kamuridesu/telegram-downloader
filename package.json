@@ -1,18 +1,25 @@
 {
   "name": "telegram_downloader",
-  "version": "0.0.1",
-  "author": "Ionic Framework",
-  "homepage": "https://ionicframework.com/",
+  "version": "0.0.2",
+  "author": {
+    "name": "Kamuri Amorim",
+    "email": "myk.gata14@gmail.com",
+    "url": "https://kamuridesu.com"
+  },
+  "homepage": "https://github.com/kamuridesu/telegram-downloader#readme",
+  "bugs": {
+    "url": "https://github.com/kamuridesu/telegram-downloader/issues",
+    "email": "myk.gata14@gmail.com"
+  },
   "scripts": {
     "ng": "ng",
-    "start": "electron-forge start",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
     "electron": "electron .",
-    "package": "ionic build --prod && electron-forge package",
-    "make": "ionic build --prod && electron-forge make"
+    "package": "ionic build --prod && electron-build --dir",
+    "make": "ionic build --prod && electron-build"
   },
   "main": "main.js",
   "private": true,
@@ -27,8 +34,8 @@
     "@angular/router": "^16.0.0",
     "@capacitor/android": "5.1.0",
     "@capacitor/app": "5.0.5",
-    "@capacitor/core": "5.1.0",
-    "@capacitor/filesystem": "^5.0.5",
+    "@capacitor/core": "5.1.1",
+    "@capacitor/filesystem": "^5.1.1",
     "@capacitor/haptics": "5.0.5",
     "@capacitor/keyboard": "5.0.5",
     "@capacitor/preferences": "^5.0.5",
@@ -57,15 +64,9 @@
     "@angular/compiler": "^16.0.0",
     "@angular/compiler-cli": "^16.0.0",
     "@angular/language-service": "^16.0.0",
-    "@capacitor-community/electron": "^4.1.2",
     "@capacitor/cli": "5.1.0",
-    "@electron-forge/cli": "^6.2.1",
-    "@electron-forge/maker-deb": "^6.2.1",
-    "@electron-forge/maker-rpm": "^6.2.1",
-    "@electron-forge/maker-squirrel": "^6.2.1",
-    "@electron-forge/maker-zip": "^6.2.1",
-    "@electron-forge/plugin-auto-unpack-natives": "^6.2.1",
     "@ionic/angular-toolkit": "^9.0.0",
+    "@ionic/cli": "^7.1.1",
     "@types/jasmine": "~4.3.0",
     "@types/lodash": "^4.14.195",
     "@types/node": "^12.20.55",
@@ -74,6 +75,7 @@
     "buffer": "^6.0.3",
     "constants-browserify": "^1.0.0",
     "electron": "^25.3.0",
+    "electron-builder": "^24.6.3",
     "empty-module": "^0.0.2",
     "eslint": "^7.26.0",
     "eslint-plugin-import": "2.22.1",
@@ -103,5 +105,8 @@
     "path": false,
     "os": false,
     "child_process": false
+  },
+  "build": {
+    "appId": "com.kamuri.tldl"
   }
 }
