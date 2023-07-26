@@ -53,11 +53,11 @@ export class PasswordConfirmPage implements OnInit, OnDestroy {
   }
 
   ionViewWillLeave() {
-    console.log("Password confirm - ViewWillLeave")
+    
   }
 
   ngOnDestroy() {
-    console.log("Password - OnDestroy")
+    
   }
 
 }

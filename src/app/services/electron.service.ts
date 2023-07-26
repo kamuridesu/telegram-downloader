@@ -19,7 +19,6 @@ export class ElectronService {
     return new Promise<string>((resolve) => {
       if (this.platform.is('electron')) {
         (window as any).ipcRenderer.on('folderSelected', (event: any, folderPath: string) => {
-          console.log('Selected folder:', folderPath);
           resolve(folderPath);
         });
       }
@@ -39,7 +38,6 @@ export class ElectronService {
       (window as any).ipcRenderer.send('newFile', fileData);
       return new Promise<any>((resolve) => {
         (window as any).ipcRenderer.on('fileSaved', (event: any, success: string) => {
-          console.log("File saved!");
           resolve(success);
         })
       })

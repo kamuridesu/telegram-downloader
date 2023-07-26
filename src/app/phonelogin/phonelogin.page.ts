@@ -41,11 +41,11 @@ export class PhoneloginPage implements OnInit, OnDestroy {
   }
 
   ionViewWillLeave() {
-    console.log("Phone Login - ViewWillLeave")
+    
   }
 
   ngOnDestroy() {
-    console.log("PhoneLogin - OnDestroy")
+    
   }
 
 }

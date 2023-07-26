@@ -18,7 +18,6 @@ export class AppComponent {
   ) {
     this.platform.backButton.subscribeWithPriority(-1, () => {
       const url = this.router.url;
-      console.log(url);
 
       if (url === "/config") {
         this.navController.pop().then((value) => {}).catch((err) => {});

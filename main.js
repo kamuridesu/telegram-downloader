@@ -30,14 +30,13 @@ function createWindow() {
   });
 
   ipcMain.on('newFile', (event, data) => {
-    console.log("New file received!");
     const filePath = `${data.directory}/${data.fileName}`
     let response = false;
     try {
       fs.writeFileSync(filePath, data.buffer);
       response = true;
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
     event.sender.send("fileSaved", response);
   });

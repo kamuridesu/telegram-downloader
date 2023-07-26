@@ -142,10 +142,10 @@ export class ChatsPage implements OnInit, OnDestroy {
   }
 
   ionViewWillLeave() {
-    console.log("Chats - ViewWillLeave")
+    
   }
 
   ngOnDestroy() {
-    console.log("Chats - OnDestroy")
+    
   }
 }

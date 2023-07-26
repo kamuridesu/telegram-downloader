@@ -18,7 +18,6 @@ export class ConfirmCodePage implements OnInit, OnDestroy {
 
   async validateConfirmationCode() {
     if(this.confirmationCode.length == 5) {
-      console.log("confmation code ok");
       await this.telegram.inputTelegramCode(this.confirmationCode);
       if(this.telegram.needsPasswordAuth) {
         return this.router.navigate(["/password-confirm"]);
@@ -30,7 +29,6 @@ export class ConfirmCodePage implements OnInit, OnDestroy {
 
   async validateOnButtonSubmit() {
     if(this.confirmationCode.length == 5) {
-      return console.log("confmation code ok");
     }
     return await this.sendToastNotification("Confirmation code invalid.");
   }
@@ -55,11 +53,11 @@ export class ConfirmCodePage implements OnInit, OnDestroy {
   }
 
   ionViewWillLeave() {
-    console.log("Confirm - ViewWillLeave")
+    
   }
 
   ngOnDestroy() {
-    console.log("Confirm - OnDestroy")
+    
   }
 
 }

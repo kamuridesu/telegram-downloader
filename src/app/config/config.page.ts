@@ -45,7 +45,6 @@ export class ConfigPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    console.log("Config - OnDetroy");
     this.stopPolling();
   }
 
@@ -65,7 +64,7 @@ export class ConfigPage implements OnInit, OnDestroy {
     this.configService.getTotalConcurrentDownloads().then((value) => {
       this.totalConcurrentDownloads = value;
     }).catch(() => {
-      console.log("ee");
+      
     });
   }
 
@@ -107,7 +106,7 @@ export class ConfigPage implements OnInit, OnDestroy {
         duration: 2000,
         position: 'bottom'
       }).then((toast) => {
-        toast.present().then(() => {}).catch((err) => {console.log(err)});
+        toast.present().then(() => {}).catch((err) => {console.error(err)});
       })
     }
     this.configService.setTotalConcurrentDownloads(newTotal).then(() => {
@@ -148,7 +147,7 @@ export class ConfigPage implements OnInit, OnDestroy {
   }
 
   ionViewWillLeave() {
-    console.log("Config - ViewWillLeave")
+    
   }
   
 }

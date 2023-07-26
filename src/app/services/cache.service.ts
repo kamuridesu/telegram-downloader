@@ -22,7 +22,6 @@ export class CacheService {
   }
 
   public async setCache(chats: any[], name: string = this.CACHE_NAME) {
-    console.log(chats);
     if (! await this.dataService.hasKey(name)) {
       this.cacheCreationDate = Date.now() / 1000;
       const data = JSON.stringify({

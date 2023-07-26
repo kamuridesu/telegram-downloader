@@ -24,7 +24,6 @@ export class QueueService {
   }
 
   setLimit(newLimit: number) {
-    console.log("New limit: ", newLimit);
     this.limit = newLimit;
     this.processQueue();
   }

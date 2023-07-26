@@ -149,6 +149,8 @@ class DownloadableFile {
   public type: string = "pending";
   public progress: number = 0;
   public completed: boolean = false;
+  public filesize: number = 0;
+
   public color: string = "warning"
   private mediaData: any;
   private buffer: Buffer | undefined = undefined;
@@ -167,6 +169,7 @@ class DownloadableFile {
       this.color = message.color;
       this.completed = message.completed ? true : false;
       this.filename = message.filename ? message.filename : "file";
+      this.filesize = message.filesize ? message.filesize : 0;
     }
     this.id = message.id;
     this.chatId = chatId;
@@ -180,7 +183,8 @@ class DownloadableFile {
       color: this.color,
       completed: this.completed,
       isAlreadySaved: true,
-      id: this.id
+      id: this.id,
+      filesize: this.filesize
     }
   }
 
@@ -234,6 +238,22 @@ class DownloadableFile {
     this.isCancelled = true;
   }
 
+  private sizeOfBytes(bytes: number, suffix: string = "B") {
+    for (let unit of ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]) {
+      if (Math.abs(bytes) < 1024.0) {
+        return {
+          value: bytes.toFixed(1),
+          unit: `${unit}${suffix}`
+        }
+      }
+      bytes = bytes / 1024.0
+    }
+    return {
+      value: bytes.toFixed(1),
+      unit: `Yi${suffix}`
+    }
+  }
+
   async start(__callback: any = undefined) {
     if (this.isCancelled) {
       return;
@@ -244,11 +264,24 @@ class DownloadableFile {
     await this.getData();
     this.type = "downloading";
     this.color = "";
-    const buffer = await this.telegram.client!.downloadMedia(this.mediaData, {
-      progressCallback: ((downloaded, total) => {
-        this.progress = Math.round((downloaded as any) / (total as any) * 100) / 100;
-      })
-    });
+    let buffer: string | any | undefined;
+    let retries = 0;
+    while (retries < 5) {
+      try {
+        buffer = await this.telegram.client!.downloadMedia(this.mediaData, {
+          progressCallback: ((downloaded, total) => {
+            this.progress = Math.round((downloaded as any) / (total as any) * 100) / 100;
+          })
+        });
+        break;
+      } catch (e: any) {
+        retries++;
+        if (! await this.telegram.checkConnection()) {
+          await this.telegram.connect();
+        }
+        await this.telegram.client?.getSender(e.newDc);
+      }
+    }
     if (this.isCancelled) {
       return;
     }
