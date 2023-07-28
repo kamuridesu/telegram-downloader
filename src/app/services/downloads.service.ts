@@ -144,18 +144,19 @@ export class DownloadsService {
 
 class DownloadableFile {
 
-  public filename: string = "file";
   public id: any;
-  public type: string = "pending";
   public progress: number = 0;
-  public completed: boolean = false;
   public filesize: number = 0;
+  public completed: boolean = false;
+  public downloading: boolean = false;
+  public type: string = "pending";
+  public color: string = "warning";
+  public filename: string = "file";
 
-  public color: string = "warning"
-  private mediaData: any;
-  private buffer: Buffer | undefined = undefined;
   private chatId: any;
+  private mediaData: any;
   private isCancelled: boolean = false;
+  private buffer: Buffer | undefined = undefined;
 
   constructor(
     private telegram: TelegramService,
@@ -235,6 +236,7 @@ class DownloadableFile {
   }
 
   public cancel() {
+    this.type = "pending";
     this.isCancelled = true;
   }
 
